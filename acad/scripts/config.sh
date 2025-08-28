@@ -45,8 +45,8 @@ if [ -f ".venv/bin/activate" ]; then
 	#export PS1='[$(realpath --relative-to="$PROJECT_DIR" "$PWD")] astra-sim> '
 fi
 
-if [ -f "$HOME/.protocPaths" ]; then
-	source ~/.protocPaths
+if [ -f "$HOME/.bashrc" ]; then
+	source ~/.bashrc
 fi
 
 cd -
