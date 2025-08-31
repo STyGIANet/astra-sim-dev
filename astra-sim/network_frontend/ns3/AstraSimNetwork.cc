@@ -874,8 +874,8 @@ int main(int argc, char* argv[]) {
     for (int i = 0; i < num_npus; i++) {
         // STyGIANet
         // Set topology parameters
-        NS_ASSERT_MSG(t1l > 0, "Number of t1 uplinks is not set! This "
-                               "should be set in the topology file.");
+        // NS_ASSERT_MSG(t1l > 0, "Number of t1 uplinks is not set! This "
+        //                        "should be set in the topology file.");
         NS_ASSERT_MSG(podTors > 0, "Number of ToRs is not set! This should "
                                    "be set in the topology file.");
         NS_ASSERT_MSG(allTors > 0, "Number of ToRs is not set! This should "

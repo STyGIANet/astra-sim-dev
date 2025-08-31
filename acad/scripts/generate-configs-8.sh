@@ -7,7 +7,7 @@ NODES=(8)
 MSG_SIZES=(4000000)
 ALLREDUCE_ALGS=("ring")
 APP_LOADBALANCE_ALGS=("none")
-ROUTING_ALGS=("ECMP")
+ROUTING_ALGS=("optical")
 
 ## Hmm, it is probably better to generate these config files in-place in the respective scripts where needed.
 
@@ -85,7 +85,7 @@ N_PER_TOR=8 # Tomahawk 3, 32-port switch, 64MB Shared buffer
 for NUM_NODES in "${NODES[@]}"; do
     N_TORS=$((NUM_NODES / N_PER_TOR))
 	N_SPINES=0
-    python generate-topology.py -l 0.0005ms -nicbw 400000Gbps -t1bw 400000Gbps -g $NUM_NODES -tors ${N_TORS} -spines ${N_SPINES} -topo leafspine
+    python generate-photonic-interconnect.py -l 0.0005ms -nicbw 400Gbps -t1bw 400Gbps -g $NUM_NODES -tors ${N_TORS} -spines ${N_SPINES} -topo leafspine
 done
 
 #########################################################################
