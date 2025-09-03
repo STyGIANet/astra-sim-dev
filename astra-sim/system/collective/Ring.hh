@@ -31,6 +31,8 @@ class Ring : public Algorithm {
     void insert_packet(Callable* sender);
     bool ready();
     void exit();
+    bool stepReady();
+    ~Ring();
 
     RingTopology::Direction dimension;
     RingTopology::Direction direction;
@@ -57,6 +59,9 @@ class Ring : public Algorithm {
     bool processed;
     bool send_back;
     bool NPU_to_MA;
+
+    static int stepBarrier[1024];
+    static std::vector<Ring*> allRings;
 };
 
 }  // namespace AstraSim

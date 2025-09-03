@@ -10,6 +10,9 @@ LICENSE file in the root directory of this source tree.
 
 using namespace AstraSim;
 
+int Ring::stepBarrier[1024] = {0};
+std::vector<Ring*> Ring::allRings;
+
 Ring::Ring(ComType type,
            int id,
            RingTopology* ring_topology,
@@ -34,6 +37,8 @@ Ring::Ring(ComType type,
     this->non_zero_latency_packets = 0;
     this->toggle = false;
     this->name = Name::Ring;
+    this->allRings.push_back(this);
+    stepBarrier[0] = allRings.size();
     if (ring_topology->get_dimension() == RingTopology::Dimension::Local) {
         transmition = MemBus::Transmition::Fast;
     } else {
@@ -88,15 +93,17 @@ Ring::Ring(ComType type,
     }
 }
 
+Ring::~Ring() {
+    allRings.erase(remove(allRings.begin(), allRings.end(), this), allRings.end());
+}
+
 int Ring::get_non_zero_latency_packets() {
     return (nodes_in_ring - 1) * parallel_reduce * 1;
 }
 
 void Ring::run(EventType event, CallData* data) {
     if (event == EventType::General) {
-        free_packets += 1;
-        ready();
-        iteratable();
+        stepReady();
     } else if (event == EventType::PacketReceived) {
         total_packets_received++;
         insert_packet(nullptr);
@@ -212,6 +219,23 @@ void Ring::insert_packet(Callable* sender) {
     Sys::sys_panic("should not inject nothing!");
 }
 
+bool Ring::stepReady() {
+    if (stepBarrier[0]>0)
+        stepBarrier[0]--;
+    if (stepBarrier[0] == 0) {
+        for (auto ring : allRings) {
+            ring->free_packets += 1;
+            ring->ready();
+            ring->iteratable();
+        }
+        stepBarrier[0] = allRings.size();
+    }
+    else {
+        return false;
+    }
+    return true;
+}
+
 bool Ring::ready() {
     if (stream->state == StreamState::Created ||
         stream->state == StreamState::Ready) {
@@ -227,6 +251,7 @@ bool Ring::ready() {
     snd_req.tag = stream->stream_id;
     snd_req.reqType = UINT8;
     snd_req.vnet = this->stream->current_queue_id;
+    std::cout << "sim sending from " << id << " " << snd_req.dstRank << " step " << 2*(nodes_in_ring-1) - stream_count << std::endl;
     stream->owner->front_end_sim_send(
         0, Sys::dummy_data, msg_size, UINT8, packet.preferred_dest,
         stream->stream_id, &snd_req, Sys::FrontEndSendRecvType::COLLECTIVE,
