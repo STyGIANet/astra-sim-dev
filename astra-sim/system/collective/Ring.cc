@@ -7,6 +7,7 @@ LICENSE file in the root directory of this source tree.
 
 #include "astra-sim/system/PacketBundle.hh"
 #include "astra-sim/system/RecvPacketEventHandlerData.hh"
+#include <ns3/optical-routing-helper.h>
 
 using namespace AstraSim;
 
@@ -37,8 +38,7 @@ Ring::Ring(ComType type,
     this->non_zero_latency_packets = 0;
     this->toggle = false;
     this->name = Name::Ring;
-    this->allRings.push_back(this);
-    stepBarrier[0] = allRings.size();
+    Ring::stepBarrier[0]++;
     if (ring_topology->get_dimension() == RingTopology::Dimension::Local) {
         transmition = MemBus::Transmition::Fast;
     } else {
@@ -94,7 +94,7 @@ Ring::Ring(ComType type,
 }
 
 Ring::~Ring() {
-    allRings.erase(remove(allRings.begin(), allRings.end(), this), allRings.end());
+    Ring::allRings.erase(remove(Ring::allRings.begin(), Ring::allRings.end(), this), Ring::allRings.end());
 }
 
 int Ring::get_non_zero_latency_packets() {
@@ -220,15 +220,19 @@ void Ring::insert_packet(Callable* sender) {
 }
 
 bool Ring::stepReady() {
-    if (stepBarrier[0]>0)
+    if (stepBarrier[0]>0) {
         stepBarrier[0]--;
+        Ring::allRings.push_back(this);
+    }
     if (stepBarrier[0] == 0) {
-        for (auto ring : allRings) {
+        ns3::OpticalRoutingHelper::update_next_hop_node_ids();
+        for (auto ring : Ring::allRings) {
             ring->free_packets += 1;
             ring->ready();
             ring->iteratable();
         }
-        stepBarrier[0] = allRings.size();
+        stepBarrier[0] = Ring::allRings.size();
+        Ring::allRings.clear();
     }
     else {
         return false;
