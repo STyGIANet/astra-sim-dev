@@ -93,10 +93,6 @@ Ring::Ring(ComType type,
     }
 }
 
-Ring::~Ring() {
-    Ring::allRings.erase(remove(Ring::allRings.begin(), Ring::allRings.end(), this), Ring::allRings.end());
-}
-
 int Ring::get_non_zero_latency_packets() {
     return (nodes_in_ring - 1) * parallel_reduce * 1;
 }
@@ -220,6 +216,7 @@ void Ring::insert_packet(Callable* sender) {
 }
 
 bool Ring::stepReady() {
+    std::cout << "ready called" << std::endl;
     if (stepBarrier[0]>0) {
         stepBarrier[0]--;
         Ring::allRings.push_back(this);
@@ -228,6 +225,7 @@ bool Ring::stepReady() {
         ns3::OpticalRoutingHelper::update_next_hop_node_ids();
         for (auto ring : Ring::allRings) {
             ring->free_packets += 1;
+            std::cout << "ring ready called" << std::endl;
             ring->ready();
             ring->iteratable();
         }

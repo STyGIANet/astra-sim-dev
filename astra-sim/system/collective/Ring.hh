@@ -32,7 +32,6 @@ class Ring : public Algorithm {
     bool ready();
     void exit();
     bool stepReady();
-    ~Ring();
 
     RingTopology::Direction dimension;
     RingTopology::Direction direction;
