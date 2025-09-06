@@ -19,6 +19,7 @@
 #include <ns3/rdma.h>
 #include <ns3/sim-setting.h>
 #include <ns3/switch-node.h>
+#include <ns3/optical-routing-helper.h>
 #include <time.h>
 #include <unordered_map>
 
@@ -350,4 +351,8 @@ int setup_ns3_simulation(string network_configuration) {
 
   return 0;
 
+}
+
+int setup_optical_routing(string optical_routing_configuration) {
+  return ns3::OpticalRoutingHelper::read_optical_routing_config(optical_routing_configuration) == true ? 0 : -1;
 }

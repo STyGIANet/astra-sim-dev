@@ -753,6 +753,7 @@ string memory_configuration;
 string comm_group_configuration = "empty";
 string logical_topology_configuration;
 string logging_configuration = "empty";
+string optical_routing_configuration = "empty";
 int num_queues_per_dim = 1;
 double comm_scale = 1;
 double comp_scale = 1;
@@ -828,6 +829,8 @@ void parse_args(int argc, char* argv[]) {
 
     cmd.AddValue("qpwindowSize", "Window size for number of QPs",
                  qpwindowSize);
+    cmd.AddValue("optical-routing-configuration", "Optical routing config file",
+                 optical_routing_configuration);
 
     cmd.Parse(argc, argv);
 }
@@ -842,7 +845,12 @@ int main(int argc, char* argv[]) {
     parse_args(argc, argv);
     AstraSim::LoggerFactory::init(logging_configuration);
     read_logical_topo_config(logical_topology_configuration, logical_dims);
-
+    if (optical_routing_configuration != "empty") {
+        if (auto ok = setup_optical_routing(optical_routing_configuration); ok == -1) {
+            std::cerr << "Fail to setup optical routing." << std::endl;
+            return -1;
+        }
+    }
     // Setup network & System layer.
     vector<ASTRASimNetwork*> networks(num_npus, nullptr);
     vector<AstraSim::Sys*> systems(num_npus, nullptr);
@@ -864,7 +872,7 @@ int main(int argc, char* argv[]) {
         // }
     }
     std::cout << "System Initialized!" << std::endl;
-
+    
     // Initialize ns3 simulation.
     if (auto ok = setup_ns3_simulation(network_configuration); ok == -1) {
         std::cerr << "Fail to setup ns3 simulation." << std::endl;

@@ -11,6 +11,8 @@ SYSTEM_DIR="${PROJECT_DIR:?}/acad/system-configs"
 NETWORK_TOPO_DIR="${PROJECT_DIR:?}/acad/network-topologies"
 RESULTS_DIR="${PROJECT_DIR:?}/acad/results"
 BASE_CONFIG_DIR="${PROJECT_DIR:?}/acad/base-configs"
+OPTICAL_ROUTING=$(realpath "${SCRIPT_DIR:?}"/../base-configs/optical-routing.txt)
+
 NS3_DIR=$(realpath "${SCRIPT_DIR:?}"/../..)/extern/network_backend/ns-3
 
 if [[ ! -d $TXT_WORKLOAD_DIR ]]; then

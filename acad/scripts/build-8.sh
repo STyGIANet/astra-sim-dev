@@ -17,6 +17,7 @@ MEMORY=$(realpath "${SCRIPT_DIR:?}"/../base-configs/remote_memory.json)
 LOGICAL_TOPOLOGY=$(realpath "${SCRIPT_DIR:?}"/../base-configs/logical-topo-8.json)
 # Note that ONLY this file is relative to NS3_DIR/simulation
 NETWORK=$(realpath "${SCRIPT_DIR:?}"/../base-configs/config-8.txt)
+OPTICAL_ROUTING=$(realpath "${SCRIPT_DIR:?}"/../base-configs/optical-routing.txt)
 # Functions
 function setup {
     protoc et_def.proto\
@@ -36,7 +37,8 @@ function run {
         --network-configuration=${NETWORK} \
         --remote-memory-configuration=${MEMORY} \
         --logical-topology-configuration=${LOGICAL_TOPOLOGY} \
-        --comm-group-configuration=\"empty\"
+        --comm-group-configuration=\"empty\" \
+        --optical-routing-configuration=${OPTICAL_ROUTING}
     cd "${SCRIPT_DIR:?}"
 }
 function cleanup {
@@ -58,7 +60,8 @@ function debug {
         --network-configuration=${NETWORK} \
         --remote-memory-configuration=${MEMORY} \
         --logical-topology-configuration=${LOGICAL_TOPOLOGY} \
-        --comm-group-configuration=\"empty\"
+        --comm-group-configuration=\"empty\" \
+        --optical-routing-configuration=${OPTICAL_ROUTING}
 }
 function special_debug {
     cd "${NS3_DIR}/build/scratch"

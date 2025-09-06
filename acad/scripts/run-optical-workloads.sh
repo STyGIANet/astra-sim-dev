@@ -70,6 +70,7 @@ for MSG_SIZE in ${MSG_SIZES[@]};do
 						--network-configuration=${NETWORK} \
 						--remote-memory-configuration=${MEMORY} \
 						--logical-topology-configuration=${LOGICAL_TOPOLOGY} \
+						--optical-routing-configuration=${OPTICAL_ROUTING} \
 						--comm-group-configuration=\"empty\" > ${OUTPUT_FILE} 2> ${OUTPUT_FILE}; echo $OUTPUT_FILE)&
 			sleep 2
 			fi
