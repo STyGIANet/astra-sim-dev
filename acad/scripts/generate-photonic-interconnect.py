@@ -13,7 +13,7 @@ def gen_leaf_spine(args):
     # Sorry :D
     assert(numGpus % numTors  == 0)
 
-    file_name = "./../network-topologies/"+"leaf-spine-"+str(numTors)+"-"+str(numSpines)+"-"+str(numGpus)+".txt"
+    file_name = "./../network-topologies/"+"leaf-spine-"+str(numTors)+"-"+str(numSpines)+"-"+str(numGpus)+"-"+str(args.latency)+".txt"
 
     with open(file_name, 'w') as f:
         print(file_name)

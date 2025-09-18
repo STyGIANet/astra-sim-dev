@@ -1,0 +1,17 @@
+{
+    "scheduling-policy": "LIFO",
+    "endpoint-delay": 0,
+    "active-chunks-per-dimension": 1,
+    "preferred-dataset-splits": 1,
+    "all-reduce-implementation": ["halvingDoubling"],
+    "all-gather-implementation": ["halvingDoubling"],
+    "reduce-scatter-implementation": ["halvingDoubling"],
+    "all-to-all-implementation": ["direct"],
+    "collective-optimization": "baseline",
+    "local-mem-bw": 1600,
+    "boost-mode": 0,
+    "app-load-balance": "none",
+    "qp-randomize": 1,
+    "failed-path-timeout-ns": 100000000,
+    "mp-rdma-qp": 2
+}

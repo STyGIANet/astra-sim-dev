@@ -12,11 +12,11 @@ ASTRA_SIM_DIR="${SCRIPT_DIR:?}"/../../astra-sim
 NS3_DIR="${SCRIPT_DIR:?}"/../../extern/network_backend/ns-3
 # Inputs - change as necessary.
 WORKLOAD=$(realpath "${SCRIPT_DIR:?}"/..)/et-workloads/AllReduce-8-4000000-leaf-spine # use chakra
-SYSTEM=$(realpath "${SCRIPT_DIR:?}"/../base-configs/system.json)
+SYSTEM=$(realpath "${SCRIPT_DIR:?}"/../base-configs/system-hd.json)
 MEMORY=$(realpath "${SCRIPT_DIR:?}"/../base-configs/remote_memory.json)
 LOGICAL_TOPOLOGY=$(realpath "${SCRIPT_DIR:?}"/../base-configs/logical-topo-8.json)
 # Note that ONLY this file is relative to NS3_DIR/simulation
-NETWORK=$(realpath "${SCRIPT_DIR:?}"/../base-configs/optical-config.txt)
+NETWORK=$(realpath "${SCRIPT_DIR:?}"/../base-configs/config-optical.txt)
 OPTICAL_ROUTING=$(realpath "${SCRIPT_DIR:?}"/../base-configs/optical-routing.txt)
 # Functions
 function setup {
