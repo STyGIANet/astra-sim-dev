@@ -11,8 +11,12 @@ LICENSE file in the root directory of this source tree.
 #include "astra-sim/common/Logging.hh"
 #include "astra-sim/system/PacketBundle.hh"
 #include "astra-sim/system/RecvPacketEventHandlerData.hh"
+#include <ns3/optical-routing-helper.h>
 
 using namespace AstraSim;
+
+int HalvingDoubling::stepBarrier[1024] = {0};
+std::vector<HalvingDoubling*> HalvingDoubling::allHalvingDoubles;
 
 HalvingDoubling::HalvingDoubling(ComType type,
                                  int id,
@@ -32,6 +36,7 @@ HalvingDoubling::HalvingDoubling(ComType type,
     this->non_zero_latency_packets = 0;
     this->toggle = false;
     this->name = Name::HalvingDoubling;
+    HalvingDoubling::stepBarrier[0]++;
     if (ring_topology->get_dimension() == RingTopology::Dimension::Local) {
         transmition = MemBus::Transmition::Fast;
     } else {
@@ -79,10 +84,11 @@ HalvingDoubling::HalvingDoubling(ComType type,
     }
     RingTopology::Direction direction = specify_direction();
     this->curr_receiver = id;
+    this->curr_sender = id;
     for (int i = 0; i < rank_offset; i++) {
         this->curr_receiver =
             ring_topology->get_receiver(this->curr_receiver, direction);
-        this->curr_sender = curr_receiver;
+        this->curr_sender = ring_topology->get_sender(this->curr_sender, direction);
     }
 }
 
@@ -99,15 +105,13 @@ RingTopology::Direction HalvingDoubling::specify_direction() {
     if (reminder == 0) {
         return RingTopology::Direction::Clockwise;
     } else {
-        return RingTopology::Direction::Anticlockwise;
+        return RingTopology::Direction::Clockwise;
     }
 }
 
 void HalvingDoubling::run(EventType event, CallData* data) {
     if (event == EventType::General) {
-        free_packets += 1;
-        ready();
-        iteratable();
+        stepReady();
     } else if (event == EventType::PacketReceived) {
         total_packets_received++;
         insert_packet(nullptr);
@@ -168,11 +172,13 @@ void HalvingDoubling::process_max_count() {
             msg_size /= offset_multiplier;
         }
         curr_receiver = id;
+        curr_sender = id;
         RingTopology::Direction direction = specify_direction();
         for (int i = 0; i < rank_offset; i++) {
             curr_receiver = ((RingTopology*)logical_topo)
                                 ->get_receiver(curr_receiver, direction);
-            curr_sender = curr_receiver;
+            curr_sender = ((RingTopology*)logical_topo)
+                                ->get_sender(curr_sender, direction);
         }
     }
 }
@@ -237,6 +243,27 @@ void HalvingDoubling::insert_packet(Callable* sender) {
     Sys::sys_panic("should not inject nothing!");
 }
 
+bool HalvingDoubling::stepReady() {
+    if (stepBarrier[0]>0) {
+        stepBarrier[0]--;
+        HalvingDoubling::allHalvingDoubles.push_back(this);
+    }
+    if (stepBarrier[0] == 0) {
+        ns3::OpticalRoutingHelper::update_next_hop_node_ids();
+        for (auto halvingDouble : HalvingDoubling::allHalvingDoubles) {
+            halvingDouble->free_packets += 1;
+            halvingDouble->ready();
+            halvingDouble->iteratable();
+        }
+        stepBarrier[0] = HalvingDoubling::allHalvingDoubles.size();
+        HalvingDoubling::allHalvingDoubles.clear();
+    }
+    else {
+        return false;
+    }
+    return true;
+}
+
 bool HalvingDoubling::ready() {
     if (stream->state == StreamState::Created ||
         stream->state == StreamState::Ready) {
@@ -252,6 +279,7 @@ bool HalvingDoubling::ready() {
     snd_req.tag = stream->stream_id;
     snd_req.reqType = UINT8;
     snd_req.vnet = this->stream->current_queue_id;
+    std::cout << "sim sending from " << id << " " << snd_req.dstRank << " step " << 2 * log2(nodes_in_ring) - stream_count << std::endl;
     stream->owner->front_end_sim_send(
         0, Sys::dummy_data, packet.msg_size, UINT8, packet.preferred_dest,
         stream->stream_id, &snd_req, Sys::FrontEndSendRecvType::COLLECTIVE,

@@ -32,6 +32,7 @@ class HalvingDoubling : public Algorithm {
     void insert_packet(Callable* sender);
     bool ready();
     void exit();
+    bool stepReady();
 
     RingTopology::Direction dimension;
     MemBus::Transmition transmition;
@@ -61,6 +62,9 @@ class HalvingDoubling : public Algorithm {
 
     int rank_offset;
     double offset_multiplier;
+
+    static int stepBarrier[1024];
+    static std::vector<HalvingDoubling*> allHalvingDoubles;
 };
 
 }  // namespace AstraSim

@@ -7,12 +7,12 @@ source config.sh
 
 NODES=(8)
 MSG_SIZES=(4000000)
-ALLREDUCE_ALGS=("ring")
+ALLREDUCE_ALGS=("halvingDoubling")
 ALGS=("optical")
 # Recompile ns3
 cd ${SCRIPT_DIR}
 # ./build-8.sh -l
-# ./build-8.sh -c
+./build-8.sh -c
 ##############################################################################
 # leaf-spine topology with 256 nodes
 # Allreduce across various message sizes and load balancing algorithms
@@ -41,7 +41,7 @@ for MSG_SIZE in ${MSG_SIZES[@]};do
 			ROUTING="END_HOST_SPRAY"
 			APP_LOADBALANCE_ALG="none"
 		elif [[ $ALG == "optical" ]]; then
-			ROUTING="optical"
+			ROUTING="OPTICAL"
 			APP_LOADBALANCE_ALG="none"
 		elif [[ $ALG == "none" ]]; then
 			ROUTING="ECMP"

@@ -17,7 +17,7 @@ def gen_leaf_spine(args):
 
     with open(file_name, 'w') as f:
         print(file_name)
-        first_line = str(numNodes) + " " + str(numSwitches) + " " + str(numLinks) + " " + str(2*numSpines) + " " + str(0) + " " + str(numTors) + " " + str(numTors)
+        first_line = str(numNodes) + " " + str(numSwitches) + " " + str(numLinks*2+numGpus) + " " + str(2*numSpines) + " " + str(0) + " " + str(numTors) + " " + str(numTors)
         f.write(first_line)
         f.write('\n')
 
@@ -31,14 +31,19 @@ def gen_leaf_spine(args):
         for i in range(numGpus):
             f.write(str(i) + " " + str(numGpus + int(i / (numGpus/numTors))) + " " + str(args.nic_bandwidth) + " " + str(args.latency) + " " + str(args.error_rate))
             f.write('\n')
-            # f.write(str(i) + " " + str(numGpus + int(i / (numGpus/numTors))) + " " + str(args.nic_bandwidth) + " " + str(args.latency) + " " + str(args.error_rate))
-            # f.write('\n')
+            f.write(str(i) + " " + str(numGpus + int(i / (numGpus/numTors))) + " " + str(args.nic_bandwidth) + " " + str(args.latency) + " " + str(args.error_rate))
+            f.write('\n')
 
         # ToR <--> Spine links
         for i in range(numGpus, numGpus + numTors):
             for j in range(numGpus+numTors, numNodes):
                 f.write(str(i) + " " + str(j) + " " + str(args.tier1_bandwidth) + " " + str(args.latency) + " " + str(args.error_rate))
                 f.write('\n')
+        
+        # PCIe
+        for i in range(numGpus):
+            f.write(str(i) + " " + str((i+1)%numGpus) + " " + str(args.nic_bandwidth) + " " + str("0.000001ms") + " " + str(args.error_rate))
+            f.write('\n')
 
 def gen_fat_tree(args):
     k = args.k_ary

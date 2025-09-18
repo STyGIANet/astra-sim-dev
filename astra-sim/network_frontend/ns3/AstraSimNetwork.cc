@@ -847,7 +847,7 @@ int main(int argc, char* argv[]) {
     read_logical_topo_config(logical_topology_configuration, logical_dims);
     if (optical_routing_configuration != "empty") {
         if (auto ok = setup_optical_routing(optical_routing_configuration); ok == -1) {
-            std::cerr << "Fail to setup optical routing." << std::endl;
+            std::cerr << "Failed to setup optical routing." << std::endl;
             return -1;
         }
     }
