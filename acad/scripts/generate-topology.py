@@ -2,6 +2,44 @@
 # NVSwitches and multi-GPU servers are NOT considered here.
 import argparse
 
+def checkPowerofTwo(n: int) -> bool:
+    return n > 0 and (n & (n - 1)) == 0
+
+def gen_ring(args):
+    numGpus = args.gpus
+    numSwitches = numGpus
+    numNodes = 2*numGpus
+    numLinks = 2*numGpus
+    numSpines = 0
+    numTors = 0
+
+    # Lets be nice to recursive doubling :D
+    assert(checkPowerofTwo(numGpus))
+
+    file_name = "./../network-topologies/"+"ring-"+str(numGpus)+".txt"
+
+    with open(file_name, 'w') as f:
+        print(file_name)
+        first_line = str(numNodes) + " " + str(numSwitches) + " " + str(numLinks) + " " + str(1) + " " + str(1) + " " + str(1) + " " + str(1)
+        f.write(first_line)
+        f.write('\n')
+
+        # write the switch nodes
+        for i in range(numGpus, numNodes):
+            f.write(str(i) + " ")
+        f.write('\n')
+
+        # write the links
+        # each gpu is connected to a switch to have routing function enabled
+        for i in range(numGpus):
+            f.write(str(i) + " " + str((numGpus + int(i))) + " " + str(args.nic_bandwidth) + " " + str(args.latency) + " " + str(args.error_rate))
+            f.write('\n')
+
+        # ring topology
+        for i in range(numGpus):
+            f.write(str(numGpus+int(i)) + " " + str(int((numGpus+int(i+1))%(2*numGpus))) + " " + str(args.nic_bandwidth) + " " + str(args.latency) + " " + str(args.error_rate))
+            f.write('\n')
+
 def gen_leaf_spine(args):
     numTors = args.tor_num
     numSpines = args.spine_num
@@ -102,6 +140,8 @@ def main():
         gen_leaf_spine(args)
     elif (str(args.topology) == 'fattree'):
         gen_fat_tree(args)
+    elif (str(args.topology) == 'ring'):
+        gen_ring(args)
     else:
         print("Unsupported topology type")
 
