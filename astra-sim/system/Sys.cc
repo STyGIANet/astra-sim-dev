@@ -664,9 +664,6 @@ void Sys::handleEvent(void* arg) {
     BasicEventHandlerData* ehd = (BasicEventHandlerData*)arg;
     int id = ehd->sys_id;
     EventType event = ehd->event;
-    std::cout << "Node " << id << " handling event " << int(event)
-              << " at time " << Sys::boostedTick() << "\n";
-
     if (event == EventType::CallEvents) {
         all_sys[id]->call_events();
         delete ehd;
