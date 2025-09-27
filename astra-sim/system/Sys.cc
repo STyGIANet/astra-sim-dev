@@ -26,6 +26,7 @@ LICENSE file in the root directory of this source tree.
 #include "astra-sim/system/collective/ChakraImpl.hh"
 #include "astra-sim/system/collective/DoubleBinaryTreeAllReduce.hh"
 #include "astra-sim/system/collective/HalvingDoubling.hh"
+#include "astra-sim/system/collective/Swing.hh"
 #include "astra-sim/system/collective/Ring.hh"
 #include "astra-sim/system/scheduling/OfflineGreedy.hh"
 #include "astra-sim/system/topology/BasicLogicalTopology.hh"
@@ -562,6 +563,8 @@ CollectiveImpl* Sys::generate_collective_impl_from_input(
         return new CollectiveImpl(CollectiveImplType::HalvingDoubling);
     } else if (collective_impl_str == "oneHalvingDoubling") {
         return new CollectiveImpl(CollectiveImplType::OneHalvingDoubling);
+    } else if (collective_impl_str == "swing") {
+        return new CollectiveImpl(CollectiveImplType::Swing);
     } else {
         sys_panic("Cannot interpret collective implementations. Please check "
                   "the collective implementations in the sys"
@@ -661,6 +664,8 @@ void Sys::handleEvent(void* arg) {
     BasicEventHandlerData* ehd = (BasicEventHandlerData*)arg;
     int id = ehd->sys_id;
     EventType event = ehd->event;
+    std::cout << "Node " << id << " handling event " << int(event)
+              << " at time " << Sys::boostedTick() << "\n";
 
     if (event == EventType::CallEvents) {
         all_sys[id]->call_events();
@@ -1108,6 +1113,12 @@ CollectivePhase Sys::generate_collective_phase(
                            new HalvingDoubling(collective_type, id,
                                                (RingTopology*)topology,
                                                data_size));
+        return vn;
+    } else if (collective_impl->type == CollectiveImplType::Swing) {
+        CollectivePhase vn(this, queue_id,
+                           new Swing(collective_type, id,
+                                    (RingTopology*)topology,
+                                    data_size));
         return vn;
     } else if (collective_impl->type == CollectiveImplType::ChakraImpl) {
         string filename = ((ChakraCollectiveImpl*)collective_impl)->filename;
