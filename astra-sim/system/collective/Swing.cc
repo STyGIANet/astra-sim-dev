@@ -11,7 +11,6 @@ LICENSE file in the root directory of this source tree.
 #include "astra-sim/common/Logging.hh"
 #include "astra-sim/system/PacketBundle.hh"
 #include "astra-sim/system/RecvPacketEventHandlerData.hh"
-#include <ns3/optical-routing-helper.h>
 
 using namespace AstraSim;
 
@@ -19,9 +18,9 @@ int Swing::stepBarrier[1024] = {0};
 std::vector<Swing*> Swing::allSwings;
 
 Swing::Swing(ComType type,
-                int id,
-                RingTopology* ring_topology,
-                uint64_t data_size)
+                                 int id,
+                                 RingTopology* ring_topology,
+                                 uint64_t data_size)
     : Algorithm() {
     this->comType = type;
     this->id = id;
@@ -82,30 +81,31 @@ Swing::Swing(ComType type,
                 "Swing collective algorithm #########");
         std::exit(1);
     }
-    // RingTopology::Direction direction = specify_direction();
-    this->curr_receiver =  id % 2  == 0 ? ((id+1) % nodes_in_ring + nodes_in_ring) % nodes_in_ring : ((id-1) % nodes_in_ring + nodes_in_ring) % nodes_in_ring;
-    // for (int i = 0; i < rank_offset; i++) {
-    //     this->curr_receiver =
-    //         ring_topology->get_receiver(this->curr_receiver, direction);
-    // }
+    RingTopology::Direction direction = specify_direction();
+    this->curr_receiver = id;
+    for (int i = 0; i < rank_offset; i++) {
+        this->curr_receiver =
+            ring_topology->get_receiver(this->curr_receiver, direction);
+        this->curr_sender = curr_receiver;
+    }
 }
 
 int Swing::get_non_zero_latency_packets() {
     return log2(nodes_in_ring) - 1 * parallel_reduce;
 }
 
-// RingTopology::Direction Swing::specify_direction() {
-//     if (rank_offset == 0) {
-//         return RingTopology::Direction::Clockwise;
-//     }
-//     int reminder =
-//         (((RingTopology*)logical_topo)->get_index_in_ring() / rank_offset) % 2;
-//     if (reminder == 0) {
-//         return RingTopology::Direction::Clockwise;
-//     } else {
-//         return RingTopology::Direction::Clockwise;
-//     }
-// }
+RingTopology::Direction Swing::specify_direction() {
+    if (rank_offset == 0) {
+        return RingTopology::Direction::Clockwise;
+    }
+    int reminder =
+        (((RingTopology*)logical_topo)->get_index_in_ring() / rank_offset) % 2;
+    if (reminder == 0) {
+        return RingTopology::Direction::Clockwise;
+    } else {
+        return RingTopology::Direction::Anticlockwise;
+    }
+}
 
 void Swing::run(EventType event, CallData* data) {
     if (event == EventType::General) {
@@ -164,8 +164,7 @@ void Swing::process_max_count() {
         remained_packets_per_max_count = 1;
         rank_offset *= offset_multiplier;
         msg_size /= offset_multiplier;
-        int s = total_packets_sent+1;
-        if (total_packets_sent == log2(nodes_in_ring) && comType == ComType::All_Reduce) {
+        if (rank_offset == nodes_in_ring && comType == ComType::All_Reduce) {
             offset_multiplier = 0.5;
             rank_offset *= offset_multiplier;
             msg_size /= offset_multiplier;
@@ -175,9 +174,9 @@ void Swing::process_max_count() {
         // for (int i = 0; i < rank_offset; i++) {
         //     curr_receiver = ((RingTopology*)logical_topo)
         //                         ->get_receiver(curr_receiver, direction);
-        //     curr_sender = ((RingTopology*)logical_topo)
-        //                         ->get_sender(curr_sender, direction);
+        //     curr_sender = curr_receiver;
         // }
+        int s = total_packets_sent+1;
         int rho = (1 - int(pow(-2, s+1))) / 3;
         int p = nodes_in_ring;
         if (curr_receiver % 2 == 0) {
@@ -190,6 +189,7 @@ void Swing::process_max_count() {
         curr_sender = curr_receiver;
         std::cout << "Node " << id << " rho " << rho << " curr_sender " 
             << curr_sender << " curr_receiver " << curr_receiver << " msg_size " << msg_size << std::endl;
+
     }
 }
 
@@ -259,11 +259,11 @@ bool Swing::stepReady() {
         Swing::allSwings.push_back(this);
     }
     if (stepBarrier[0] == 0) {
-        ns3::OpticalRoutingHelper::update_next_hop_node_ids();
-        for (auto halvingDouble : Swing::allSwings) {
-            halvingDouble->free_packets += 1;
-            halvingDouble->ready();
-            halvingDouble->iteratable();
+        // ns3::OpticalRoutingHelper::update_next_hop_node_ids();
+        for (auto swinger : Swing::allSwings) {
+            swinger->free_packets += 1;
+            swinger->ready();
+            swinger->iteratable();
         }
         stepBarrier[0] = Swing::allSwings.size();
         Swing::allSwings.clear();
@@ -273,7 +273,6 @@ bool Swing::stepReady() {
     }
     return true;
 }
-
 bool Swing::ready() {
     if (stream->state == StreamState::Created ||
         stream->state == StreamState::Ready) {
@@ -289,7 +288,8 @@ bool Swing::ready() {
     snd_req.tag = stream->stream_id;
     snd_req.reqType = UINT8;
     snd_req.vnet = this->stream->current_queue_id;
-    std::cout << "sim sending from " << id << " " << snd_req.dstRank << " step " << 2 * log2(nodes_in_ring) - stream_count << std::endl;
+    std::cout << "hello from swing" << std::endl;
+    std::cout << "sim sending from " << id << " " << snd_req.dstRank << " step " << total_packets_received << std::endl;
     stream->owner->front_end_sim_send(
         0, Sys::dummy_data, packet.msg_size, UINT8, packet.preferred_dest,
         stream->stream_id, &snd_req, Sys::FrontEndSendRecvType::COLLECTIVE,
