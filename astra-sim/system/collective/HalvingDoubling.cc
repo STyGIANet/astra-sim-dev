@@ -207,6 +207,9 @@ void HalvingDoubling::insert_packet(Callable* sender) {
         toggle = !toggle;
     }
     if (zero_latency_packets > 0) {
+        if (id == 0)
+        std::cout << "Zero lat Swing rank " << id << " next receiver/sender " << curr_receiver
+                  << " msg size " << msg_size << std::endl;
         packets.push_back(MyPacket(
             msg_size, stream->current_queue_id, curr_sender,
             curr_receiver));  // vnet Must be changed for alltoall topology
@@ -219,6 +222,9 @@ void HalvingDoubling::insert_packet(Callable* sender) {
         zero_latency_packets--;
         return;
     } else if (non_zero_latency_packets > 0) {
+        if (id == 0)
+        std::cout << "Non zero lat Swing rank " << id << " next receiver/sender " << curr_receiver
+                  << " msg size " << msg_size << std::endl;
         packets.push_back(MyPacket(
             msg_size, stream->current_queue_id, curr_sender,
             curr_receiver));  // vnet Must be changed for alltoall topology
@@ -279,7 +285,10 @@ bool HalvingDoubling::ready() {
     snd_req.tag = stream->stream_id;
     snd_req.reqType = UINT8;
     snd_req.vnet = this->stream->current_queue_id;
-    std::cout << "sim sending from " << id << " " << snd_req.dstRank << " step " << 2 * log2(nodes_in_ring) - stream_count << std::endl;
+    if (id == 0) {
+    std::cout << "sim sending from " << id << " " << snd_req.dstRank << " step " << total_packets_sent << " msg size" << packet.msg_size << std::endl;
+    std::cout << "========== round finished ==============" << std::endl;
+    }    
     stream->owner->front_end_sim_send(
         0, Sys::dummy_data, packet.msg_size, UINT8, packet.preferred_dest,
         stream->stream_id, &snd_req, Sys::FrontEndSendRecvType::COLLECTIVE,
