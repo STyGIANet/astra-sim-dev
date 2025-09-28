@@ -61,6 +61,7 @@ class Swing : public Algorithm {
     bool NPU_to_MA;
 
     int rank_offset;
+    int rho;
     double offset_multiplier;
 
     static int stepBarrier[1024];

@@ -34,6 +34,7 @@ Swing::Swing(ComType type,
     this->zero_latency_packets = 0;
     this->non_zero_latency_packets = 0;
     this->toggle = false;
+    this->rho = 0;
     this->name = Name::Swing;
     Swing::stepBarrier[0]++;
     if (ring_topology->get_dimension() == RingTopology::Dimension::Local) {
@@ -164,11 +165,12 @@ void Swing::process_max_count() {
         remained_packets_per_max_count = 1;
         rank_offset *= offset_multiplier;
         msg_size /= offset_multiplier;
-        if (rank_offset == nodes_in_ring && comType == ComType::All_Reduce) {
+        if (total_packets_sent == log2(nodes_in_ring) - 1 && comType == ComType::All_Reduce) {
             offset_multiplier = 0.5;
             rank_offset *= offset_multiplier;
             msg_size /= offset_multiplier;
         }
+
         curr_receiver = id;
         // RingTopology::Direction direction = specify_direction();
         // for (int i = 0; i < rank_offset; i++) {
@@ -176,8 +178,19 @@ void Swing::process_max_count() {
         //                         ->get_receiver(curr_receiver, direction);
         //     curr_sender = curr_receiver;
         // }
-        int s = total_packets_sent+1;
-        int rho = (1 - int(pow(-2, s+1))) / 3;
+        // When a swing object is created it auto uses rho as +1 and sets its curr_receiver and curr_sender accordingly
+        // and sim sends its data
+        // therefore step 0 gets completed before we call this method. We start using this method from step 1...
+        // total packets sent is the last step id
+        int nextStepId = total_packets_sent + 1;
+        int finalStepId = 2*log2(nodes_in_ring) - 1;
+        if (finalStepId - nextStepId <= total_packets_sent) { // reduce scatter done, now all gather
+            nextStepId = finalStepId - nextStepId;
+        }
+
+        int currentRho = (1 - int(pow(-2, nextStepId+1))) / 3;
+        
+        rho = currentRho;
         int p = nodes_in_ring;
         if (curr_receiver % 2 == 0) {
             curr_receiver += rho;
@@ -187,9 +200,6 @@ void Swing::process_max_count() {
             curr_receiver = (curr_receiver % p + p) % p;
         }
         curr_sender = curr_receiver;
-        std::cout << "Node " << id << " rho " << rho << " curr_sender " 
-            << curr_sender << " curr_receiver " << curr_receiver << " msg_size " << msg_size << std::endl;
-
     }
 }
 
@@ -217,6 +227,9 @@ void Swing::insert_packet(Callable* sender) {
         toggle = !toggle;
     }
     if (zero_latency_packets > 0) {
+        if (id == 0)
+        std::cout << "Zero lat Swing rank " << id << " next receiver/sender " << curr_receiver
+                  << " msg size " << msg_size << std::endl;
         packets.push_back(MyPacket(
             msg_size, stream->current_queue_id, curr_sender,
             curr_receiver));  // vnet Must be changed for alltoall topology
@@ -229,6 +242,9 @@ void Swing::insert_packet(Callable* sender) {
         zero_latency_packets--;
         return;
     } else if (non_zero_latency_packets > 0) {
+        if (id == 0)
+        std::cout << "Non zero lat Swing rank " << id << " next receiver/sender " << curr_receiver
+                  << " msg size " << msg_size << std::endl;
         packets.push_back(MyPacket(
             msg_size, stream->current_queue_id, curr_sender,
             curr_receiver));  // vnet Must be changed for alltoall topology
@@ -288,8 +304,12 @@ bool Swing::ready() {
     snd_req.tag = stream->stream_id;
     snd_req.reqType = UINT8;
     snd_req.vnet = this->stream->current_queue_id;
-    std::cout << "hello from swing" << std::endl;
-    std::cout << "sim sending from " << id << " " << snd_req.dstRank << " step " << total_packets_received << std::endl;
+    if (id == 0) {
+        std::cout << "sim sending from " << id << " " << snd_req.dstRank << " step " << total_packets_sent << " msg size " << packet.msg_size << std::endl;
+        std::cout << "========== round finished ==============" << std::endl;
+        std::cout << "---------- next round -------------" << std::endl;
+        std::cout << "curr sender " << curr_sender << " curr receiver " << curr_receiver << " rho "<< rho << std::endl;
+    }
     stream->owner->front_end_sim_send(
         0, Sys::dummy_data, packet.msg_size, UINT8, packet.preferred_dest,
         stream->stream_id, &snd_req, Sys::FrontEndSendRecvType::COLLECTIVE,
