@@ -3,7 +3,7 @@
 # find the absolute path to this script
 source config.sh
 
-NODES=(8)
+NODES=(8 16)
 MSG_SIZES=(1000000 2000000 4000000 8000000 16000000 32000000 64000000 128000000 256000000)
 ALLGATHER_ALGS=("direct" "halvingDoubling" "ring" "doubleBinaryTree")
 APP_LOADBALANCE_ALGS=("none")
@@ -18,12 +18,36 @@ for NUM_NODES in "${NODES[@]}"; do
 		echo "conv1 -1 5 NONE 0 5 NONE 0 5  ALLGATHER $MSG_SIZE 5" >> AllGather-$NUM_NODES-$MSG_SIZE-ring.txt
 	done
 done
+for NUM_NODES in "${NODES[@]}"; do
+	for MSG_SIZE in ${MSG_SIZES[@]};do
+		echo "MICRO" > ReduceScatter-$NUM_NODES-$MSG_SIZE-ring.txt
+		echo "1" >> ReduceScatter-$NUM_NODES-$MSG_SIZE-ring.txt
+		echo "conv1 -1 5 NONE 0 5 NONE 0 5  REDUCESCATTER $MSG_SIZE 5" >> ReduceScatter-$NUM_NODES-$MSG_SIZE-ring.txt
+	done
+done
+for NUM_NODES in "${NODES[@]}"; do
+	for MSG_SIZE in ${MSG_SIZES[@]};do
+		echo "MICRO" > AllReduce-$NUM_NODES-$MSG_SIZE-ring.txt
+		echo "1" >> AllReduce-$NUM_NODES-$MSG_SIZE-ring.txt
+		echo "conv1 -1 5 NONE 0 5 NONE 0 5  ALLREDUCE $MSG_SIZE 5" >> AllReduce-$NUM_NODES-$MSG_SIZE-ring.txt
+	done
+done
 
 # Next, generate et workload files
 cd $SCRIPT_DIR
 for NUM_NODES in "${NODES[@]}"; do
 	for MSG_SIZE in ${MSG_SIZES[@]};do
 		./chakra-text-to-et.sh AllGather-$NUM_NODES-$MSG_SIZE-ring $NUM_NODES 1
+	done
+done
+for NUM_NODES in "${NODES[@]}"; do
+	for MSG_SIZE in ${MSG_SIZES[@]};do
+		./chakra-text-to-et.sh ReduceScatter-$NUM_NODES-$MSG_SIZE-ring $NUM_NODES 1
+	done
+done
+for NUM_NODES in "${NODES[@]}"; do
+	for MSG_SIZE in ${MSG_SIZES[@]};do
+		./chakra-text-to-et.sh AllReduce-$NUM_NODES-$MSG_SIZE-ring $NUM_NODES 1
 	done
 done
 
