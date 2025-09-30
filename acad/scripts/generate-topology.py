@@ -36,9 +36,11 @@ def gen_ring(args):
             f.write('\n')
 
         # ring topology
-        for i in range(numGpus):
+        for i in range(numGpus-1):
             f.write(str(numGpus+int(i)) + " " + str(int((numGpus+int(i+1))%(2*numGpus))) + " " + str(args.nic_bandwidth) + " " + str(args.latency) + " " + str(args.error_rate))
             f.write('\n')
+
+        f.write(str(numGpus*2-1) + " " + str(int(numGpus)) + " " + str(args.nic_bandwidth) + " " + str(args.latency) + " " + str(args.error_rate))
 
 def gen_leaf_spine(args):
     numTors = args.tor_num
