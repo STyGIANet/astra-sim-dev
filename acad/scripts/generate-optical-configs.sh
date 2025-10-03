@@ -3,25 +3,34 @@
 # find the absolute path to this script
 source config.sh
 
-NODES=(8 16 32 64 128 256)
-MSG_SIZES=(4000000 8000000 16000000 32000000)
-PROPAGATION_DELAY=("0.0005ms") # Put unit for the delays!!
+NODES=(64)
+# MSG_SIZES=(64 1000 160000 256000 4000000 64000000 1000000000)
+# PROPAGATION_DELAY=("0.0005ms") # Put unit for the delays (ms)!!
+# RECONFIG_DELAY=("0ns" "10ns" "100ns" "1000ns" "10000ns" "100000ns" "1000000ns") # Put unit for the reconfigs (ns)!!
+# BANDWIDTH=("800Gbps") # Put unit for the bandwidth (Gbps)!!
+
+NODES=(64)
+MSG_SIZES=(128000000 256000000 512000000)
+PROPAGATION_DELAY=("0.0005ms") # Put unit for the delays (ms)!!
+RECONFIG_DELAY=("0ns" "10ns" "100ns" "1000ns" "10000ns" "100000ns" "1000000ns") # Put unit for the reconfigs (ns)!!
+BANDWIDTH=("800Gbps") # Put unit for the bandwidth (Gbps)!!
+
 ALLREDUCE_ALGS=("halvingDoubling")
 APP_LOADBALANCE_ALGS=("none")
 ROUTING_ALGS=("OPTICAL")
 
-## Hmm, it is probably better to generate these config files in-place in the respective scripts where needed.
+# Hmm, it is probably better to generate these config files in-place in the respective scripts where needed.
 
-# First, generate txt workload files
+First, generate txt workload files
 cd $TXT_WORKLOAD_DIR
 for NUM_NODES in "${NODES[@]}"; do
 	for MSG_SIZE in ${MSG_SIZES[@]};do
-		echo "MICRO" > AllReduce-$NUM_NODES-$MSG_SIZE-leaf-spine.txt
-		echo "1" >> AllReduce-$NUM_NODES-$MSG_SIZE-leaf-spine.txt
-		echo "conv1 -1 5 NONE 0 5 NONE 0 5  ALLREDUCE $MSG_SIZE 5" >> AllReduce-$NUM_NODES-$MSG_SIZE-leaf-spine.txt
+		echo "MICRO" > AllReduce-$NUM_NODES-$MSG_SIZE-optical-ring.txt
+		echo "1" >> AllReduce-$NUM_NODES-$MSG_SIZE-optical-ring.txt
+		echo "conv1 -1 5 NONE 0 5 NONE 0 5  ALLREDUCE $MSG_SIZE 5" >> AllReduce-$NUM_NODES-$MSG_SIZE-optical-ring.txt
 	done
 	for TXT_WORKLOAD in ${TXT_WORKLOADS[@]};do
-		cp "$BASE_CONFIG_DIR"/"$TXT_WORKLOAD".txt "$TXT_WORKLOAD_DIR"/$TXT_WORKLOAD-$NUM_NODES-leaf-spine.txt
+		cp "$BASE_CONFIG_DIR"/"$TXT_WORKLOAD".txt "$TXT_WORKLOAD_DIR"/$TXT_WORKLOAD-$NUM_NODES-optical-ring.txt
 	done
 done
 
@@ -29,7 +38,7 @@ done
 cd $SCRIPT_DIR
 for NUM_NODES in "${NODES[@]}"; do
 	for MSG_SIZE in ${MSG_SIZES[@]};do
-		./chakra-text-to-et.sh AllReduce-$NUM_NODES-$MSG_SIZE-leaf-spine $NUM_NODES 1
+		./chakra-text-to-et.sh AllReduce-$NUM_NODES-$MSG_SIZE-optical-ring $NUM_NODES 1
 	done
 done
 
@@ -79,51 +88,67 @@ done
 cd $SCRIPT_DIR
 for NUM_NODES in "${NODES[@]}"; do
 	for DELAY in "${PROPAGATION_DELAY[@]}"; do
-		N_PER_TOR=$NUM_NODES
-		N_TORS=$((NUM_NODES / N_PER_TOR))
-		N_SPINES=0
-		python generate-photonic-interconnect.py -l $DELAY -nicbw 400Gbps -t1bw 400Gbps -g $NUM_NODES -tors ${N_TORS} -spines ${N_SPINES} -topo leafspine
+		for BW in "${BANDWIDTH[@]}"; do
+			N_PER_TOR=$NUM_NODES
+			N_TORS=$((NUM_NODES / N_PER_TOR))
+			N_SPINES=0
+			python generate-photonic-interconnect.py -l ${DELAY} -nicbw ${BW} -g ${NUM_NODES} -tors ${N_TORS} -spines ${N_SPINES} -topo ring
+		done
+	done
+done
+for NUM_NODES in "${NODES[@]}"; do
+	for MESSAGE in "${MSG_SIZES[@]}"; do
+		for DELAY in "${PROPAGATION_DELAY[@]}"; do
+			for BW in "${BANDWIDTH[@]}"; do
+				for RECONF in "${RECONFIG_DELAY[@]}"; do
+					python generate-reconfig-topology.py -n ${NUM_NODES} -m ${MESSAGE} --delta ${DELAY} --bw ${BW} --reconf ${RECONF}
+				done
+			done
+		done
 	done
 done
 
 #########################################################################
 # Generate network config files
-# Some unnecessary files may be generated but it's fine
 cd $NETWORK_DIR
 for MSG_SIZE in ${MSG_SIZES[@]};do
-	for APP_LOADBALANCE_ALG in ${APP_LOADBALANCE_ALGS[@]}; do
-	    for ALLREDUCE_ALG in ${ALLREDUCE_ALGS[@]}; do
-			for NUM_NODES in ${NODES[@]}; do
-				N_PER_TOR=$NUM_NODES
-			    N_TORS=$((NUM_NODES / N_PER_TOR))
-				N_SPINES=0
-			    for ROUTING in ${ROUTING_ALGS[@]}; do
-					for PDELAY in ${PROPAGATION_DELAY[@]}; do
-						cp $BASE_CONFIG_DIR/config-optical-base.txt config-leaf-spine-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALLREDUCE_ALG}-${MSG_SIZE}-${PDELAY}.txt
-						sed -i "s|TOPOLOGY_FILE .*|TOPOLOGY_FILE acad/network-topologies/leaf-spine-${N_TORS}-${N_SPINES}-${NUM_NODES}-${PDELAY}.txt|g" config-leaf-spine-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALLREDUCE_ALG}-${MSG_SIZE}-${PDELAY}.txt
-						sed -i "s|TRACE_OUTPUT_FILE .*|TRACE_OUTPUT_FILE acad/results/mix-leaf-spine-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALLREDUCE_ALG}-${MSG_SIZE}-${PDELAY}.tr|g" config-leaf-spine-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALLREDUCE_ALG}-${MSG_SIZE}-${PDELAY}.txt
-						sed -i "s|FCT_OUTPUT_FILE .*|FCT_OUTPUT_FILE acad/results/fct-leaf-spine-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALLREDUCE_ALG}-${MSG_SIZE}-${PDELAY}.txt|g" config-leaf-spine-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALLREDUCE_ALG}-${MSG_SIZE}-${PDELAY}.txt
-						sed -i "s|PFC_OUTPUT_FILE .*|PFC_OUTPUT_FILE acad/results/pfc-leaf-spine-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALLREDUCE_ALG}-${MSG_SIZE}-${PDELAY}.txt|g" config-leaf-spine-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALLREDUCE_ALG}-${MSG_SIZE}-${PDELAY}.txt
-						sed -i "s|QLEN_MON_FILE .*|QLEN_MON_FILE acad/results/qlen-leaf-spine-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALLREDUCE_ALG}-${MSG_SIZE}-${PDELAY}.txt|g" config-leaf-spine-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALLREDUCE_ALG}-${MSG_SIZE}-${PDELAY}.txt
+for APP_LOADBALANCE_ALG in ${APP_LOADBALANCE_ALGS[@]}; do
+for ALLREDUCE_ALG in ${ALLREDUCE_ALGS[@]}; do
+for NUM_NODES in ${NODES[@]}; do
+	N_PER_TOR=$NUM_NODES
+	N_TORS=$((NUM_NODES / N_PER_TOR))
+	N_SPINES=0
+	for ROUTING in ${ROUTING_ALGS[@]}; do
+	for PDELAY in ${PROPAGATION_DELAY[@]}; do
+	for RECONF in ${RECONFIG_DELAY[@]}; do
+	for BW in ${BANDWIDTH[@]}; do
+		cp $BASE_CONFIG_DIR/config-optical-base.txt config-optical-ring-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALLREDUCE_ALG}-${MSG_SIZE}-${PDELAY}-${BW}-${RECONF}.txt
+		sed -i "s|TOPOLOGY_FILE .*|TOPOLOGY_FILE acad/network-topologies/optical-ring-${N_TORS}-${NUM_NODES}-${PDELAY}-${BW}.txt|g" config-optical-ring-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALLREDUCE_ALG}-${MSG_SIZE}-${PDELAY}-${BW}-${RECONF}.txt
+		sed -i "s|TRACE_OUTPUT_FILE .*|TRACE_OUTPUT_FILE acad/results/mix-optical-ring-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALLREDUCE_ALG}-${MSG_SIZE}-${PDELAY}-${BW}-${RECONF}.tr|g" config-optical-ring-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALLREDUCE_ALG}-${MSG_SIZE}-${PDELAY}-${BW}-${RECONF}.txt
+		sed -i "s|FCT_OUTPUT_FILE .*|FCT_OUTPUT_FILE acad/results/fct-optical-ring-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALLREDUCE_ALG}-${MSG_SIZE}-${PDELAY}-${BW}-${RECONF}.txt|g" config-optical-ring-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALLREDUCE_ALG}-${MSG_SIZE}-${PDELAY}-${BW}-${RECONF}.txt
+		sed -i "s|PFC_OUTPUT_FILE .*|PFC_OUTPUT_FILE acad/results/pfc-optical-ring-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALLREDUCE_ALG}-${MSG_SIZE}-${PDELAY}-${BW}-${RECONF}.txt|g" config-optical-ring-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALLREDUCE_ALG}-${MSG_SIZE}-${PDELAY}-${BW}-${RECONF}.txt
+		sed -i "s|QLEN_MON_FILE .*|QLEN_MON_FILE acad/results/qlen-optical-ring-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALLREDUCE_ALG}-${MSG_SIZE}-${PDELAY}-${BW}-${RECONF}.txt|g" config-optical-ring-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALLREDUCE_ALG}-${MSG_SIZE}-${PDELAY}-${BW}-${RECONF}.txt
 
-						sed -i "s|SOURCE_ROUTING .*|SOURCE_ROUTING 0|g" config-leaf-spine-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALLREDUCE_ALG}-${MSG_SIZE}-${PDELAY}.txt
-						sed -i "s|REPS .*|REPS 0|g" config-leaf-spine-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALLREDUCE_ALG}-${MSG_SIZE}-${PDELAY}.txt
-						sed -i "s|REPSv4 .*|REPSv4 0|g" config-leaf-spine-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALLREDUCE_ALG}-${MSG_SIZE}-${PDELAY}.txt
-						sed -i "s|END_HOST_SPRAY .*|END_HOST_SPRAY 0|g" config-leaf-spine-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALLREDUCE_ALG}-${MSG_SIZE}-${PDELAY}.txt
-						sed -i "s|OPTICAL .*|OPTICAL 0|g" config-leaf-spine-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALLREDUCE_ALG}-${MSG_SIZE}-${PDELAY}.txt
+		sed -i "s|SOURCE_ROUTING .*|SOURCE_ROUTING 0|g" config-optical-ring-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALLREDUCE_ALG}-${MSG_SIZE}-${PDELAY}-${BW}-${RECONF}.txt
+		sed -i "s|REPS .*|REPS 0|g" config-optical-ring-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALLREDUCE_ALG}-${MSG_SIZE}-${PDELAY}-${BW}-${RECONF}.txt
+		sed -i "s|REPSv4 .*|REPSv4 0|g" config-optical-ring-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALLREDUCE_ALG}-${MSG_SIZE}-${PDELAY}-${BW}-${RECONF}.txt
+		sed -i "s|END_HOST_SPRAY .*|END_HOST_SPRAY 0|g" config-optical-ring-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALLREDUCE_ALG}-${MSG_SIZE}-${PDELAY}-${BW}-${RECONF}.txt
+		sed -i "s|OPTICAL .*|OPTICAL 0|g" config-optical-ring-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALLREDUCE_ALG}-${MSG_SIZE}-${PDELAY}-${BW}-${RECONF}.txt
 
-						sed -i "s|${ROUTING} .*|${ROUTING} 1|g" config-leaf-spine-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALLREDUCE_ALG}-${MSG_SIZE}-${PDELAY}.txt
+		sed -i "s|${ROUTING} .*|${ROUTING} 1|g" config-optical-ring-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALLREDUCE_ALG}-${MSG_SIZE}-${PDELAY}-${BW}-${RECONF}.txt
 
-						if [[ $ALLREDUCE_ALG == "ring" ]];then
-							sed -i "s|STPRIO .*|STPRIO 1|g" config-leaf-spine-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALLREDUCE_ALG}-${MSG_SIZE}-${PDELAY}.txt
-						else
-							sed -i "s|STPRIO .*|STPRIO 0|g" config-leaf-spine-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALLREDUCE_ALG}-${MSG_SIZE}-${PDELAY}.txt
-						fi
-					done
-			    done
-			done
-		done
+		if [[ $ALLREDUCE_ALG == "ring" ]];then
+			sed -i "s|STPRIO .*|STPRIO 1|g" config-optical-ring-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALLREDUCE_ALG}-${MSG_SIZE}-${PDELAY}-${BW}-${RECONF}.txt
+		else
+			sed -i "s|STPRIO .*|STPRIO 0|g" config-optical-ring-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALLREDUCE_ALG}-${MSG_SIZE}-${PDELAY}-${BW}-${RECONF}.txt
+		fi
 	done
+	done
+	done
+	done
+done
+done
+done
 done
 
 cd $SCRIPT_DIR
