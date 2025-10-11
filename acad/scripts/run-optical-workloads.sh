@@ -5,17 +5,13 @@ N_CORES=$2
 # find the absolute path to this script
 source config.sh
 
-NODES=(64)
-MSG_SIZES=(128000000 256000000 512000000)
+NODES=(8 16 32 64)
+MSG_SIZES=(64 1000 160000 256000 4000000 64000000 1000000000)
 PROPAGATION_DELAY=("0.0005ms") # Put unit for the delays (ms)!!
-# RECONFIG_DELAY=("10ns") # Put unit for the reconfigs (ns)!!
-BANDWIDTH=("800Gbps") # Put unit for the bandwidth (Gbps)!!
-
-# NODES=(64)
-# MSG_SIZES=(160000 32000000)
-# PROPAGATION_DELAY=("0.0005ms") # Put unit for the delays (ms)!!
 RECONFIG_DELAY=("0ns" "10ns" "100ns" "1000ns" "10000ns" "100000ns" "1000000ns") # Put unit for the reconfigs (ns)!!
-BANDWIDTH=("800Gbps") # Put unit for the bandwidth (Gbps)!!
+BANDWIDTH=("400Gbps" "800Gbps" "1200Gbps" "3200Gbps") # Put unit for the bandwidth (Gbps)!!
+ALPHA_DELAY=(10 100 10000) #units in ns!!!
+
 ALLREDUCE_ALGS=("halvingDoubling")
 ALGS=("optical")
 # Recompile ns3
@@ -59,6 +55,7 @@ for NODE in ${NODES[@]};do
 
 			for ALLREDUCE_ALG in ${ALLREDUCE_ALGS[@]};do
 
+				for ALPHA in ${ALPHA_DELAY[@]};do
 				for PDELAY in ${PROPAGATION_DELAY[@]};do
 				for BW in ${BANDWIDTH[@]};do
 				for RECONF in ${RECONFIG_DELAY[@]};do
@@ -69,11 +66,11 @@ for NODE in ${NODES[@]};do
 					done
 
 					WORKLOAD=${ET_WORKLOAD_DIR}/AllReduce-$NUM_NODES-$MSG_SIZE-optical-ring
-					SYSTEM=${SYSTEM_DIR}/system-$ALLREDUCE_ALG-$APP_LOADBALANCE_ALG.json
-					NETWORK=${NETWORK_DIR}/config-optical-ring-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALLREDUCE_ALG}-${MSG_SIZE}-${PDELAY}-${BW}-${RECONF}.txt
+					SYSTEM=${SYSTEM_DIR}/system-$ALLREDUCE_ALG-$APP_LOADBALANCE_ALG-$ALPHA.json
+					NETWORK=${NETWORK_DIR}/config-optical-ring-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALLREDUCE_ALG}-${MSG_SIZE}-${ALPHA}ns-${PDELAY}-${BW}-${RECONF}.txt
 					MEMORY=${MEMORY_DIR}/remote_memory.json
 					LOGICAL_TOPOLOGY=${LOGICAL_TOPO_DIR}/logical-topo-$NUM_NODES.json
-					OUTPUT_FILE=${RESULTS_DIR}/AllReduce-$NUM_NODES-$MSG_SIZE-optical-ring-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALLREDUCE_ALG}-${PDELAY}-${BW}-${RECONF}.out
+					OUTPUT_FILE=${RESULTS_DIR}/AllReduce-$NUM_NODES-$MSG_SIZE-optical-ring-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALLREDUCE_ALG}-${ALPHA}ns-${PDELAY}-${BW}-${RECONF}.out
 					OPTICAL_ROUTING=${OPTICAL_ROUTING_DIR}/optical-ring-${NUM_NODES}-${MSG_SIZE}-${PDELAY}-${BW}-${RECONF}.txt
 					cd ${PROJECT_DIR}
 					if [[ $EXP == 1 ]];then
@@ -89,6 +86,7 @@ for NODE in ${NODES[@]};do
 					fi
 					echo "$NETWORK"
 					N=$(( $N+1 ))
+				done
 				done
 				done
 				done

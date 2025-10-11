@@ -3,17 +3,12 @@
 # find the absolute path to this script
 source config.sh
 
-NODES=(64)
-# MSG_SIZES=(64 1000 160000 256000 4000000 64000000 1000000000)
-# PROPAGATION_DELAY=("0.0005ms") # Put unit for the delays (ms)!!
-# RECONFIG_DELAY=("0ns" "10ns" "100ns" "1000ns" "10000ns" "100000ns" "1000000ns") # Put unit for the reconfigs (ns)!!
-# BANDWIDTH=("800Gbps") # Put unit for the bandwidth (Gbps)!!
-
-NODES=(64)
-MSG_SIZES=(128000000 256000000 512000000)
+NODES=(8 16 32 64)
+MSG_SIZES=(64 1000 160000 256000 4000000 64000000 1000000000)
 PROPAGATION_DELAY=("0.0005ms") # Put unit for the delays (ms)!!
 RECONFIG_DELAY=("0ns" "10ns" "100ns" "1000ns" "10000ns" "100000ns" "1000000ns") # Put unit for the reconfigs (ns)!!
-BANDWIDTH=("800Gbps") # Put unit for the bandwidth (Gbps)!!
+BANDWIDTH=("400Gbps" "800Gbps" "1200Gbps" "3200Gbps") # Put unit for the bandwidth (Gbps)!!
+ALPHA_DELAY=(10 100 10000) #units in ns!!!
 
 ALLREDUCE_ALGS=("halvingDoubling")
 APP_LOADBALANCE_ALGS=("none")
@@ -62,24 +57,28 @@ cd $SYSTEM_DIR
 
 for APP_LOADBALANCE_ALG in ${APP_LOADBALANCE_ALGS[@]}; do
     for ALLREDUCE_ALG in ${ALLREDUCE_ALGS[@]}; do
-        cp $BASE_CONFIG_DIR/system.json system-$ALLREDUCE_ALG-$APP_LOADBALANCE_ALG.json
-        perl -0777 -i -pe "s/\"all-reduce-implementation\":\s*\[\s*\"ring\"\s*\]/\"all-reduce-implementation\": [\"$ALLREDUCE_ALG\"]/g" system-$ALLREDUCE_ALG-$APP_LOADBALANCE_ALG.json
-		perl -0777 -i -pe "s/\"all-gather-implementation\":\s*\[\s*\"ring\"\s*\]/\"all-gather-implementation\": [\"$ALLREDUCE_ALG\"]/g" system-$ALLREDUCE_ALG-$APP_LOADBALANCE_ALG.json
-		perl -0777 -i -pe "s/\"all-to-all-implementation\":\s*\[\s*\"ring\"\s*\]/\"all-to-all-implementation\": [\"direct\"]/g" system-$ALLREDUCE_ALG-$APP_LOADBALANCE_ALG.json
-		perl -0777 -i -pe "s/\"reduce-scatter-implementation\":\s*\[\s*\"ring\"\s*\]/\"reduce-scatter-implementation\": [\"$ALLREDUCE_ALG\"]/g" system-$ALLREDUCE_ALG-$APP_LOADBALANCE_ALG.json
-        
-        if [[ $APP_LOADBALANCE_ALG == "mp-rdma-2" ]]; then
-            sed -i "s|\"app-load-balance\": \"none\"|\"app-load-balance\": \"mp-rdma\"|g" system-$ALLREDUCE_ALG-$APP_LOADBALANCE_ALG.json
-            sed -i "s|\"mp-rdma-qp\": 2|\"mp-rdma-qp\": 2|g" system-$ALLREDUCE_ALG-$APP_LOADBALANCE_ALG.json
-        elif [[ $APP_LOADBALANCE_ALG == "mp-rdma-4" ]]; then
-            sed -i "s|\"app-load-balance\": \"none\"|\"app-load-balance\": \"mp-rdma\"|g" system-$ALLREDUCE_ALG-$APP_LOADBALANCE_ALG.json
-            sed -i "s|\"mp-rdma-qp\": 2|\"mp-rdma-qp\": 4|g" system-$ALLREDUCE_ALG-$APP_LOADBALANCE_ALG.json
-        elif [[ $APP_LOADBALANCE_ALG == "mp-rdma-8" ]]; then
-            sed -i "s|\"app-load-balance\": \"none\"|\"app-load-balance\": \"mp-rdma\"|g" system-$ALLREDUCE_ALG-$APP_LOADBALANCE_ALG.json
-            sed -i "s|\"mp-rdma-qp\": 2|\"mp-rdma-qp\": 8|g" system-$ALLREDUCE_ALG-$APP_LOADBALANCE_ALG.json
-        else
-            sed -i "s|\"app-load-balance\": \"none\"|\"app-load-balance\": \"$APP_LOADBALANCE_ALG\"|g" system-$ALLREDUCE_ALG-$APP_LOADBALANCE_ALG.json
-        fi
+		for ALPHA in ${ALPHA_DELAY[@]}; do
+			cp $BASE_CONFIG_DIR/system.json system-$ALLREDUCE_ALG-$APP_LOADBALANCE_ALG-$ALPHA.json
+			perl -0777 -i -pe "s/\"all-reduce-implementation\":\s*\[\s*\"ring\"\s*\]/\"all-reduce-implementation\": [\"$ALLREDUCE_ALG\"]/g" system-$ALLREDUCE_ALG-$APP_LOADBALANCE_ALG-$ALPHA.json
+			perl -0777 -i -pe "s/\"all-gather-implementation\":\s*\[\s*\"ring\"\s*\]/\"all-gather-implementation\": [\"$ALLREDUCE_ALG\"]/g" system-$ALLREDUCE_ALG-$APP_LOADBALANCE_ALG-$ALPHA.json
+			perl -0777 -i -pe "s/\"all-to-all-implementation\":\s*\[\s*\"ring\"\s*\]/\"all-to-all-implementation\": [\"direct\"]/g" system-$ALLREDUCE_ALG-$APP_LOADBALANCE_ALG-$ALPHA.json
+			perl -0777 -i -pe "s/\"reduce-scatter-implementation\":\s*\[\s*\"ring\"\s*\]/\"reduce-scatter-implementation\": [\"$ALLREDUCE_ALG\"]/g" system-$ALLREDUCE_ALG-$APP_LOADBALANCE_ALG-$ALPHA.json
+			sed -i "s|\"endpoint-delay\": 0|\"endpoint-delay\": $ALPHA|g" system-$ALLREDUCE_ALG-$APP_LOADBALANCE_ALG-$ALPHA.json
+
+			
+			if [[ $APP_LOADBALANCE_ALG == "mp-rdma-2" ]]; then
+				sed -i "s|\"app-load-balance\": \"none\"|\"app-load-balance\": \"mp-rdma\"|g" system-$ALLREDUCE_ALG-$APP_LOADBALANCE_ALG-$ALPHA.json
+				sed -i "s|\"mp-rdma-qp\": 2|\"mp-rdma-qp\": 2|g" system-$ALLREDUCE_ALG-$APP_LOADBALANCE_ALG-$ALPHA.json
+			elif [[ $APP_LOADBALANCE_ALG == "mp-rdma-4" ]]; then
+				sed -i "s|\"app-load-balance\": \"none\"|\"app-load-balance\": \"mp-rdma\"|g" system-$ALLREDUCE_ALG-$APP_LOADBALANCE_ALG-$ALPHA.json
+				sed -i "s|\"mp-rdma-qp\": 2|\"mp-rdma-qp\": 4|g" system-$ALLREDUCE_ALG-$APP_LOADBALANCE_ALG-$ALPHA.json
+			elif [[ $APP_LOADBALANCE_ALG == "mp-rdma-8" ]]; then
+				sed -i "s|\"app-load-balance\": \"none\"|\"app-load-balance\": \"mp-rdma\"|g" system-$ALLREDUCE_ALG-$APP_LOADBALANCE_ALG-$ALPHA.json
+				sed -i "s|\"mp-rdma-qp\": 2|\"mp-rdma-qp\": 8|g" system-$ALLREDUCE_ALG-$APP_LOADBALANCE_ALG-$ALPHA.json
+			else
+				sed -i "s|\"app-load-balance\": \"none\"|\"app-load-balance\": \"$APP_LOADBALANCE_ALG\"|g" system-$ALLREDUCE_ALG-$APP_LOADBALANCE_ALG-$ALPHA.json
+			fi
+		done
     done
 done
 
@@ -91,6 +90,7 @@ for NUM_NODES in "${NODES[@]}"; do
 		for BW in "${BANDWIDTH[@]}"; do
 			N_PER_TOR=$NUM_NODES
 			N_TORS=$((NUM_NODES / N_PER_TOR))
+			N_TORS=$((N_TORS+1)) # for the optical pcie
 			N_SPINES=0
 			python generate-photonic-interconnect.py -l ${DELAY} -nicbw ${BW} -g ${NUM_NODES} -tors ${N_TORS} -spines ${N_SPINES} -topo ring
 		done
@@ -117,31 +117,34 @@ for ALLREDUCE_ALG in ${ALLREDUCE_ALGS[@]}; do
 for NUM_NODES in ${NODES[@]}; do
 	N_PER_TOR=$NUM_NODES
 	N_TORS=$((NUM_NODES / N_PER_TOR))
+	N_TORS=$((N_TORS+1))
 	N_SPINES=0
 	for ROUTING in ${ROUTING_ALGS[@]}; do
+	for ALPHA in ${ALPHA_DELAY[@]}; do
 	for PDELAY in ${PROPAGATION_DELAY[@]}; do
 	for RECONF in ${RECONFIG_DELAY[@]}; do
 	for BW in ${BANDWIDTH[@]}; do
-		cp $BASE_CONFIG_DIR/config-optical-base.txt config-optical-ring-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALLREDUCE_ALG}-${MSG_SIZE}-${PDELAY}-${BW}-${RECONF}.txt
-		sed -i "s|TOPOLOGY_FILE .*|TOPOLOGY_FILE acad/network-topologies/optical-ring-${N_TORS}-${NUM_NODES}-${PDELAY}-${BW}.txt|g" config-optical-ring-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALLREDUCE_ALG}-${MSG_SIZE}-${PDELAY}-${BW}-${RECONF}.txt
-		sed -i "s|TRACE_OUTPUT_FILE .*|TRACE_OUTPUT_FILE acad/results/mix-optical-ring-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALLREDUCE_ALG}-${MSG_SIZE}-${PDELAY}-${BW}-${RECONF}.tr|g" config-optical-ring-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALLREDUCE_ALG}-${MSG_SIZE}-${PDELAY}-${BW}-${RECONF}.txt
-		sed -i "s|FCT_OUTPUT_FILE .*|FCT_OUTPUT_FILE acad/results/fct-optical-ring-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALLREDUCE_ALG}-${MSG_SIZE}-${PDELAY}-${BW}-${RECONF}.txt|g" config-optical-ring-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALLREDUCE_ALG}-${MSG_SIZE}-${PDELAY}-${BW}-${RECONF}.txt
-		sed -i "s|PFC_OUTPUT_FILE .*|PFC_OUTPUT_FILE acad/results/pfc-optical-ring-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALLREDUCE_ALG}-${MSG_SIZE}-${PDELAY}-${BW}-${RECONF}.txt|g" config-optical-ring-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALLREDUCE_ALG}-${MSG_SIZE}-${PDELAY}-${BW}-${RECONF}.txt
-		sed -i "s|QLEN_MON_FILE .*|QLEN_MON_FILE acad/results/qlen-optical-ring-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALLREDUCE_ALG}-${MSG_SIZE}-${PDELAY}-${BW}-${RECONF}.txt|g" config-optical-ring-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALLREDUCE_ALG}-${MSG_SIZE}-${PDELAY}-${BW}-${RECONF}.txt
+		cp $BASE_CONFIG_DIR/config-optical-base.txt config-optical-ring-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALLREDUCE_ALG}-${MSG_SIZE}-${ALPHA}ns-${PDELAY}-${BW}-${RECONF}.txt
+		sed -i "s|TOPOLOGY_FILE .*|TOPOLOGY_FILE acad/network-topologies/optical-ring-${N_TORS}-${NUM_NODES}-${PDELAY}-${BW}.txt|g" config-optical-ring-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALLREDUCE_ALG}-${MSG_SIZE}-${ALPHA}ns-${PDELAY}-${BW}-${RECONF}.txt
+		sed -i "s|TRACE_OUTPUT_FILE .*|TRACE_OUTPUT_FILE acad/results/mix-optical-ring-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALLREDUCE_ALG}-${MSG_SIZE}-${ALPHA}ns-${PDELAY}-${BW}-${RECONF}.tr|g" config-optical-ring-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALLREDUCE_ALG}-${MSG_SIZE}-${ALPHA}ns-${PDELAY}-${BW}-${RECONF}.txt
+		sed -i "s|FCT_OUTPUT_FILE .*|FCT_OUTPUT_FILE acad/results/fct-optical-ring-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALLREDUCE_ALG}-${MSG_SIZE}-${ALPHA}ns-${PDELAY}-${BW}-${RECONF}.txt|g" config-optical-ring-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALLREDUCE_ALG}-${MSG_SIZE}-${ALPHA}ns-${PDELAY}-${BW}-${RECONF}.txt
+		sed -i "s|PFC_OUTPUT_FILE .*|PFC_OUTPUT_FILE acad/results/pfc-optical-ring-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALLREDUCE_ALG}-${MSG_SIZE}-${ALPHA}ns-${PDELAY}-${BW}-${RECONF}.txt|g" config-optical-ring-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALLREDUCE_ALG}-${MSG_SIZE}-${ALPHA}ns-${PDELAY}-${BW}-${RECONF}.txt
+		sed -i "s|QLEN_MON_FILE .*|QLEN_MON_FILE acad/results/qlen-optical-ring-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALLREDUCE_ALG}-${MSG_SIZE}-${ALPHA}ns-${PDELAY}-${BW}-${RECONF}.txt|g" config-optical-ring-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALLREDUCE_ALG}-${MSG_SIZE}-${ALPHA}ns-${PDELAY}-${BW}-${RECONF}.txt
 
-		sed -i "s|SOURCE_ROUTING .*|SOURCE_ROUTING 0|g" config-optical-ring-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALLREDUCE_ALG}-${MSG_SIZE}-${PDELAY}-${BW}-${RECONF}.txt
-		sed -i "s|REPS .*|REPS 0|g" config-optical-ring-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALLREDUCE_ALG}-${MSG_SIZE}-${PDELAY}-${BW}-${RECONF}.txt
-		sed -i "s|REPSv4 .*|REPSv4 0|g" config-optical-ring-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALLREDUCE_ALG}-${MSG_SIZE}-${PDELAY}-${BW}-${RECONF}.txt
-		sed -i "s|END_HOST_SPRAY .*|END_HOST_SPRAY 0|g" config-optical-ring-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALLREDUCE_ALG}-${MSG_SIZE}-${PDELAY}-${BW}-${RECONF}.txt
-		sed -i "s|OPTICAL .*|OPTICAL 0|g" config-optical-ring-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALLREDUCE_ALG}-${MSG_SIZE}-${PDELAY}-${BW}-${RECONF}.txt
+		sed -i "s|SOURCE_ROUTING .*|SOURCE_ROUTING 0|g" config-optical-ring-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALLREDUCE_ALG}-${MSG_SIZE}-${ALPHA}ns-${PDELAY}-${BW}-${RECONF}.txt
+		sed -i "s|REPS .*|REPS 0|g" config-optical-ring-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALLREDUCE_ALG}-${MSG_SIZE}-${ALPHA}ns-${PDELAY}-${BW}-${RECONF}.txt
+		sed -i "s|REPSv4 .*|REPSv4 0|g" config-optical-ring-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALLREDUCE_ALG}-${MSG_SIZE}-${ALPHA}ns-${PDELAY}-${BW}-${RECONF}.txt
+		sed -i "s|END_HOST_SPRAY .*|END_HOST_SPRAY 0|g" config-optical-ring-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALLREDUCE_ALG}-${MSG_SIZE}-${ALPHA}ns-${PDELAY}-${BW}-${RECONF}.txt
+		sed -i "s|OPTICAL .*|OPTICAL 0|g" config-optical-ring-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALLREDUCE_ALG}-${MSG_SIZE}-${ALPHA}ns-${PDELAY}-${BW}-${RECONF}.txt
 
-		sed -i "s|${ROUTING} .*|${ROUTING} 1|g" config-optical-ring-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALLREDUCE_ALG}-${MSG_SIZE}-${PDELAY}-${BW}-${RECONF}.txt
+		sed -i "s|${ROUTING} .*|${ROUTING} 1|g" config-optical-ring-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALLREDUCE_ALG}-${MSG_SIZE}-${ALPHA}ns-${PDELAY}-${BW}-${RECONF}.txt
 
 		if [[ $ALLREDUCE_ALG == "ring" ]];then
-			sed -i "s|STPRIO .*|STPRIO 1|g" config-optical-ring-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALLREDUCE_ALG}-${MSG_SIZE}-${PDELAY}-${BW}-${RECONF}.txt
+			sed -i "s|STPRIO .*|STPRIO 1|g" config-optical-ring-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALLREDUCE_ALG}-${MSG_SIZE}-${ALPHA}ns-${PDELAY}-${BW}-${RECONF}.txt
 		else
-			sed -i "s|STPRIO .*|STPRIO 0|g" config-optical-ring-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALLREDUCE_ALG}-${MSG_SIZE}-${PDELAY}-${BW}-${RECONF}.txt
+			sed -i "s|STPRIO .*|STPRIO 0|g" config-optical-ring-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALLREDUCE_ALG}-${MSG_SIZE}-${ALPHA}ns-${PDELAY}-${BW}-${RECONF}.txt
 		fi
+	done
 	done
 	done
 	done

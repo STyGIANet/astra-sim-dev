@@ -29,14 +29,14 @@ def gen_optical_ring(args):
         # write the links
         # each gpu is connected to a ToR switch
         for i in range(numGpus):
-            f.write(str(i) + " " + str(numGpus + int(i / (numGpus/numTors))) + " " + str(args.nic_bandwidth) + " " + str(args.latency) + " " + str(args.error_rate))
+            f.write(str(i) + " " + str(numGpus) + " " + str(args.nic_bandwidth) + " " + str(args.latency) + " " + str(args.error_rate))
             f.write('\n')
-            f.write(str(i) + " " + str(numGpus + int(i / (numGpus/numTors))) + " " + str(args.nic_bandwidth) + " " + str(args.latency) + " " + str(args.error_rate))
+            f.write(str(i) + " " + str(numGpus) + " " + str(args.nic_bandwidth) + " " + str(args.latency) + " " + str(args.error_rate))
             f.write('\n')
        
         # PCIe
         for i in range(numGpus):
-            f.write(str(i) + " " + str((i+1)%numGpus) + " " + str(args.nic_bandwidth) + " " + str("0.000001ms") + " " + str(args.error_rate))
+            f.write(str(i) + " " + str(numGpus+1) + " " + str(args.nic_bandwidth) + " " + str("0.000001ms") + " " + str(args.error_rate))
             f.write('\n')
 
 

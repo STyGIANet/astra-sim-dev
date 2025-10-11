@@ -161,7 +161,8 @@ def main():
             # print(step, i, (i+2**(currState-1))%args.n)
             content.append(f"{step} {i} {(i+2**(currState-1))%args.n}")
 
-    # print(finalReconfList)
+    # print(finalTotalCost)
+
 
     file_name = "./../topo-reconfigs/"+"optical-ring-"+str(args.n)+"-"+str(int(args.m))+"-"+delta_str+"ms-"+str(int(bw))+"Gbps-"+reconf_str+"ns"+".txt"
 

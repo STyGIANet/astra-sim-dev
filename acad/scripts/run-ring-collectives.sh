@@ -5,23 +5,21 @@ N_CORES=$2
 # find the absolute path to this script
 source config.sh
 
-NODES=(64)
-MSG_SIZES=(128000000 256000000 512000000)
+
+NODES=(4 8 16 32)
+MSG_SIZES=(32000000)
 PROPAGATION_DELAY=("0.0005ms") # Put unit for the delays (ms)!!
-RECONFIG_DELAY=("0ns") # Put unit for the reconfigs (ns)!!
+RECONFIG_DELAY=("0ns" "10ns" "100ns" "1000ns" "10000ns" "100000ns" "1000000ns") # Put unit for the reconfigs (ns)!!
 BANDWIDTH=("800Gbps") # Put unit for the bandwidth (Gbps)!!
-# TXT_WORKLOADS=("DLRM_HybridParallel" "Resnet50_DataParallel" "MLP_HybridParallel_Data_Model")
-ALLREDUCE_ALGS=("halvingDoubling")
-APP_LOADBALANCE_ALGS=("none")
-ROUTING_ALGS=("ECMP")
+ALPHA_DELAY=(0) #units in ns!!!
 
-
+ALLREDUCE_ALGS=('halvingDoubling')
 ALGS=("none")
 
 # Recompile ns3
 cd ${SCRIPT_DIR}
 # ./build.sh -l
-./build.sh -c
+# ./build.sh -c
 ##############################################################################
 # leaf-spine topology with 256 nodes
 # Allreduce across various message sizes and load balancing algorithms
@@ -55,6 +53,7 @@ for MSG_SIZE in ${MSG_SIZES[@]};do
 		fi
 
 		for ALLREDUCE_ALG in ${ALLREDUCE_ALGS[@]};do
+            for ALPHA in ${ALPHA_DELAY[@]};do
             for PDELAY in ${PROPAGATION_DELAY[@]};do
             for BW in ${BANDWIDTH[@]};do
 
@@ -64,11 +63,11 @@ for MSG_SIZE in ${MSG_SIZES[@]};do
                 done
 
                 WORKLOAD=${ET_WORKLOAD_DIR}/AllReduce-$NUM_NODES-$MSG_SIZE-leaf-spine
-                SYSTEM=${SYSTEM_DIR}/system-$ALLREDUCE_ALG-$APP_LOADBALANCE_ALG.json
-                NETWORK=${NETWORK_DIR}/config-ring-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALLREDUCE_ALG}-${MSG_SIZE}-${PDELAY}-${BW}.txt
+                SYSTEM=${SYSTEM_DIR}/system-$ALLREDUCE_ALG-$APP_LOADBALANCE_ALG-$ALPHA.json
+                NETWORK=${NETWORK_DIR}/config-ring-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALLREDUCE_ALG}-${MSG_SIZE}-${ALPHA}ns-${PDELAY}-${BW}.txt
                 MEMORY=${MEMORY_DIR}/remote_memory.json
                 LOGICAL_TOPOLOGY=${LOGICAL_TOPO_DIR}/logical-topo-$NUM_NODES.json
-                OUTPUT_FILE=${RESULTS_DIR}/AllReduce-$NUM_NODES-$MSG_SIZE-ring-$ALG-$ALLREDUCE_ALG-${PDELAY}-${BW}.out
+                OUTPUT_FILE=${RESULTS_DIR}/AllReduce-$NUM_NODES-$MSG_SIZE-ring-$ALG-$ALLREDUCE_ALG-${ALPHA}ns-${PDELAY}-${BW}.out
 
                 cd ${PROJECT_DIR}
                 if [[ $EXP == 1 ]];then
@@ -83,6 +82,7 @@ for MSG_SIZE in ${MSG_SIZES[@]};do
                 fi
                 echo "$NETWORK"
                 N=$(( $N+1 ))
+            done
             done
             done
 		done
