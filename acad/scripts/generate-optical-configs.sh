@@ -4,7 +4,7 @@
 source config.sh
 
 NODES=(8 16 32 64)
-MSG_SIZES=(128 1000 16000 256000 4000000 64000000 256000000 1000000000)
+MSG_SIZES=(128 1000 16000 256000 4000000 64000000 256000000)
 # MSG_SIZES=(64 1000 160000 256000 4000000 64000000 1000000000)
 PROPAGATION_DELAY=("0.0005ms" "0.00025ms") # Put unit for the delays (ms)!!
 RECONFIG_DELAY=("0ns" "10ns" "100ns" "1000ns" "10000ns" "100000ns" "1000000ns") # Put unit for the reconfigs (ns)!!
@@ -112,6 +112,7 @@ for NUM_NODES in "${NODES[@]}"; do
 					python generate-reconfig-topology.py -n ${NUM_NODES} -m ${MESSAGE} --delta ${DELAY} --bw ${BW} --reconf ${RECONF}
 					python generate-reconfig-swing.py -n ${NUM_NODES} -m ${MESSAGE} --delta ${DELAY} --bw ${BW} --reconf ${RECONF}
 					python generate-reconfig-all-to-all.py -n ${NUM_NODES} -m ${MESSAGE} --delta ${DELAY} --bw ${BW} --reconf ${RECONF}
+					echo "generate-reconfig-all-to-all.py -n ${NUM_NODES} -m ${MESSAGE} --delta ${DELAY} --bw ${BW} --reconf ${RECONF}"
 				done
 			done
 		done

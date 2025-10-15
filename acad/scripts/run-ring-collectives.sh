@@ -6,11 +6,11 @@ N_CORES=$2
 source config.sh
 
 NODES=(8 16 32 64)
-MSG_SIZES=(128 1000 16000 256000 4000000 64000000 256000000 1000000000)
+MSG_SIZES=(128 1000 16000 256000 4000000 64000000 256000000)
 PROPAGATION_DELAY=("0.0005ms") # Put unit for the delays (ms)!!
 RECONFIG_DELAY=("0ns" "10ns" "100ns" "1000ns" "10000ns" "100000ns" "1000000ns") # Put unit for the reconfigs (ns)!!
-BANDWIDTH=("400Gbps" "800Gbps" "1600Gbps" "3200Gbps") # Put unit for the bandwidth (Gbps)!!
-ALPHA_DELAY=(0 10 100 10000) #units in ns!!!
+BANDWIDTH=("800Gbps" "3200Gbps") # Put unit for the bandwidth (Gbps)!!
+ALPHA_DELAY=(100 10000) #units in ns!!!
 
 # NODES=(16)
 # MSG_SIZES=(16000)
