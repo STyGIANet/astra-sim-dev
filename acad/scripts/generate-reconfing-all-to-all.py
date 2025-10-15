@@ -17,6 +17,22 @@ def tranCost(a: int, b: int, m: float, beta: float) -> float:
         return 0.0
     return beta*(m / (2 ** a)) * ((b - a) + 1)
 
+def completionTime(a: int, b: int, m: float, beta: float, delta: float, n: float) -> float:
+    if b<a or beta == 0.0:
+        return 0.0
+
+    if a==b:
+        return delta*1 + beta * (m/n)
+    else:
+        propcost = 0
+        trancost = 0
+        for step in range(a, b+1):
+            rho = step
+            propcost += delta*rho
+            trancost += beta*(m/n)*rho
+        totalCost = propcost + trancost
+        return totalCost
+
 
 def computeSchedule(s: int, k: int, m: int = 1, beta: float = 1.0, delta: float = 1.0) -> Tuple[float, List[int]]:
     if s < 1:
@@ -25,11 +41,12 @@ def computeSchedule(s: int, k: int, m: int = 1, beta: float = 1.0, delta: float 
     INF = float("inf")
     DP = [[INF] * (k + 1) for _ in range(0, s + 2)] # s + 1 - 1 + 1 rows
     nxt = [[None] * (k + 1) for _ in range(0, s + 2)]
+    graphList = [[None] * (k + 1) for _ in range(0, s + 2)]
 
     for a in range(1, s+1):
         # comm = beta*(m / (2 ** a)) * ((s - a) + 1)
-        comm = tranCost(a, s, m, beta)
-        prop = propCost(a, s, delta)
+        comm = completionTime(a, s, m, beta,delta,s+1)
+        prop = 0
         # print(beta, m, a, s)
         # print(f"comm {comm}, prop {prop}")
         DP[a][0] = comm + prop
@@ -43,8 +60,9 @@ def computeSchedule(s: int, k: int, m: int = 1, beta: float = 1.0, delta: float 
             best = INF
             argb: Optional[int] = None
             for b in range(a, s+1):
-                comm = tranCost(a, b, m, beta)
-                prop = propCost(a, b, delta)
+            # for b in reversed(range(a,s+1)):
+                comm = completionTime(a, b, m, beta,delta,s+1)
+                prop = 0
                 val = comm + prop + DP[b+1][t - 1]
                 if val < best:
                     best, argb = val, b + 1
@@ -108,7 +126,7 @@ def main():
     if args.n <= 1:
         print("Use at least 2 nodes.")
         return
-    s = math.ceil(math.log2(args.n))
+    s = args.n-1
     if s < 1:
         print("Use at least 2 nodes, and n as a power of 2.")
         return
@@ -132,43 +150,65 @@ def main():
 
     currState = 1
     content = []
+    reverseContent = []
     # Note: steps are indexed from 1.
     for step in range(1,s+1):
+        rho = step
+        # print(rho,step,s, args.n-1)
         if step in finalReconfList:
             currState = step
-        for i in range(args.n):
-            # steps indexing from 0 in the print
-            # print(step-1, i, (i+2**(currState-1))%args.n)
-            content.append(f"{step-1} {i} {(i+2**(currState-1))%args.n}")
+            rho = step
+            print(rho,step)
+            for i in range(args.n):
+                content.append(f"{step-1} {i} {(((i+rho)%args.n))}")
+                print(f"{step-1} {i} {(((i+rho)%args.n))}")
+                reverseContent.append(f"{2*s-step} {i} {(((i+rho)%args.n))}")
+        else:
+            for i in range(args.n):
+                content.append(f"{step-1} {i} {(i+1)%args.n}")
+                print(f"{step-1} {i} {(i+1)%args.n}")
+                reverseContent.append(f"{2*s-step} {i} {(i+1)%args.n}")
 
 
-
-
-    # Reduction phase
-    for step in range(s, 2*s):
-        # logical_step goes from s down to 1
-        logical_step = 2*s - step
+    # # Reduction phase
+    # for step in range(s, 2*s):
+    #     # logical_step goes from s down to 1
+    #     logical_step = 2*s - step
         
-        # Find the correct currState for this logical_step
-        currState = 1
-        for reconf_step in finalReconfList:
-            if reconf_step <= logical_step:
-                currState = reconf_step
-            else:
-                break
-        
-        for i in range(args.n):
-            # print(step, i, (i+2**(currState-1))%args.n)
-            content.append(f"{step} {i} {(i+2**(currState-1))%args.n}")
+    #     # Find the correct currState for this logical_step
+    #     currState = 1
+    #     found = 0
+    #     for reconf_step in finalReconfList:
+    #         if reconf_step <= logical_step:
+    #             currState = reconf_step
+    #             found = 1
+    #         else:
+    #             found = 0
+    #             break
+
+    #     if found==0:
+    #         for i in range(args.n):
+    #             # print(step, i, (i+2**(currState-1))%args.n)
+    #             content.append(f"{step-1} {i} {(i+1)%args.n}")
+    #     else:
+    #         rho = np.sum([(-2)**i for i in range (0,currState)])
+    #         for i in range(args.n):
+    #             # steps indexing from 0 in the print
+    #             # print(step-1, i, (i+2**(currState-1))%args.n)
+    #             if i%2:
+    #                 content.append(f"{step-1} {i} {(((i+rho)%args.n)+args.n)%args.n}")
+    #             else:
+    #                 content.append(f"{step-1} {i} {(((i-rho)%args.n)+args.n)%args.n}")
 
     # print(finalTotalCost)
 
 
-    file_name = "./../topo-reconfigs/"+"optical-ring-"+str(args.n)+"-"+str(int(args.m))+"-"+delta_str+"ms-"+str(int(bw))+"Gbps-"+reconf_str+"ns"+"-halvingDoubling"+".txt"
+    file_name = "./../topo-reconfigs/"+"optical-ring-"+str(args.n)+"-"+str(int(args.m))+"-"+delta_str+"ms-"+str(int(bw))+"Gbps-"+reconf_str+"ns"+"-direct1"+".txt"
 
     with open(file_name, "w") as f:
         f.write(f"Reconfiguration List: {finalReconfList}\n")
         f.write("Total reconfig cost: "+str(len(finalReconfList)*reconf*1e9)+" ns\n")
         f.write("\n".join(content))
+        f.write("\n".join(reverseContent))
 if __name__ == "__main__":
     main()

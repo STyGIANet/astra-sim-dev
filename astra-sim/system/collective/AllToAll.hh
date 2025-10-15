@@ -25,6 +25,9 @@ class AllToAll : public Ring {
     void process_max_count();
     int get_non_zero_latency_packets();
     int middle_point;
+    bool stepReady();
+    static int stepBarrier[1024];
+    static std::vector<AllToAll*> allAlltoAlls;
 };
 
 }  // namespace AstraSim

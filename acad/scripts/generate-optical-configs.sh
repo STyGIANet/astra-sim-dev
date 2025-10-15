@@ -3,20 +3,28 @@
 # find the absolute path to this script
 source config.sh
 
-NODES=(8 16 32 64)
-MSG_SIZES=(64 1000 160000 256000 4000000 64000000 1000000000)
-PROPAGATION_DELAY=("0.0005ms") # Put unit for the delays (ms)!!
+NODES=(8 16 32 64 128 256)
+MSG_SIZES=(128 1000 16000 256000 4000000 64000000 256000000 1000000000)
+# MSG_SIZES=(64 1000 160000 256000 4000000 64000000 1000000000)
+PROPAGATION_DELAY=("0.0005ms" "0.00025ms") # Put unit for the delays (ms)!!
 RECONFIG_DELAY=("0ns" "10ns" "100ns" "1000ns" "10000ns" "100000ns" "1000000ns") # Put unit for the reconfigs (ns)!!
 BANDWIDTH=("400Gbps" "800Gbps" "1200Gbps" "3200Gbps") # Put unit for the bandwidth (Gbps)!!
-ALPHA_DELAY=(10 100 10000) #units in ns!!!
+ALPHA_DELAY=(0 10 100 10000) #units in ns!!!
 
-ALLREDUCE_ALGS=("halvingDoubling")
+# NODES=(16)
+# MSG_SIZES=(160000)
+# PROPAGATION_DELAY=("0.0005ms") # Put unit for the delays (ms)!!
+# RECONFIG_DELAY=("1000000ns") # Put unit for the reconfigs (ns)!!
+# BANDWIDTH=("400Gbps") # Put unit for the bandwidth (Gbps)!!
+# ALPHA_DELAY=(10 ) #units in ns!!!
+
+ALLREDUCE_ALGS=("halvingDoubling" "direct1" "swing")
 APP_LOADBALANCE_ALGS=("none")
 ROUTING_ALGS=("OPTICAL")
 
 # Hmm, it is probably better to generate these config files in-place in the respective scripts where needed.
 
-First, generate txt workload files
+# First, generate txt workload files
 cd $TXT_WORKLOAD_DIR
 for NUM_NODES in "${NODES[@]}"; do
 	for MSG_SIZE in ${MSG_SIZES[@]};do
@@ -102,6 +110,8 @@ for NUM_NODES in "${NODES[@]}"; do
 			for BW in "${BANDWIDTH[@]}"; do
 				for RECONF in "${RECONFIG_DELAY[@]}"; do
 					python generate-reconfig-topology.py -n ${NUM_NODES} -m ${MESSAGE} --delta ${DELAY} --bw ${BW} --reconf ${RECONF}
+					python generate-reconfig-swing.py -n ${NUM_NODES} -m ${MESSAGE} --delta ${DELAY} --bw ${BW} --reconf ${RECONF}
+					python generate-reconfig-all-to-all.py -n ${NUM_NODES} -m ${MESSAGE} --delta ${DELAY} --bw ${BW} --reconf ${RECONF}
 				done
 			done
 		done

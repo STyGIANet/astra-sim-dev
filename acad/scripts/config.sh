@@ -1,6 +1,6 @@
 #!/bin/bash
 ulimit -n 100000
-SCRIPT_DIR=$(dirname "$(realpath "$0")")
+SCRIPT_DIR=$(dirname "$(realpath ./scripts/)")
 PROJECT_DIR=$(realpath "${SCRIPT_DIR:?}/../..")
 TXT_WORKLOAD_DIR="${PROJECT_DIR:?}/acad/text-workloads"
 ET_WORKLOAD_DIR="${PROJECT_DIR:?}/acad/et-workloads"
@@ -39,16 +39,20 @@ fi
 if [[ ! -d $RESULTS_DIR ]]; then
 	mkdir -p $RESULTS_DIR
 fi
-
-cd $PROJECT_DIR
-if [ -f ".venv/bin/activate" ]; then
-	# export VIRTUAL_ENV_DISABLE_PROMPT=1
-	source .venv/bin/activate
-	#export PS1='[$(realpath --relative-to="$PROJECT_DIR" "$PWD")] astra-sim> '
+if [[ ! -d $OPTICAL_ROUTING_DIR ]]; then
+        mkdir -p $OPTICAL_ROUTING_DIR
 fi
+
+
+#cd $PROJECT_DIR
+#if [ -f ".venv/bin/activate" ]; then
+	# export VIRTUAL_ENV_DISABLE_PROMPT=1
+#	source .venv/bin/activate
+	#export PS1='[$(realpath --relative-to="$PROJECT_DIR" "$PWD")] astra-sim> '
+#fi
 
 if [ -f "$HOME/.bashrc" ]; then
 	source ~/.bashrc
 fi
 
-cd -
+#cd -

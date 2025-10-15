@@ -11,6 +11,7 @@ LICENSE file in the root directory of this source tree.
 #include "astra-sim/common/Logging.hh"
 #include "astra-sim/system/PacketBundle.hh"
 #include "astra-sim/system/RecvPacketEventHandlerData.hh"
+#include <ns3/optical-routing-helper.h>
 
 using namespace AstraSim;
 
@@ -45,6 +46,7 @@ Swing::Swing(ComType type,
     switch (type) {
     case ComType::All_Reduce:
         stream_count = 2 * log2(nodes_in_ring);
+        ns3::OpticalRoutingHelper::setSwing(log2(nodes_in_ring));
         break;
     default:
         stream_count = log2(nodes_in_ring);
@@ -89,6 +91,7 @@ Swing::Swing(ComType type,
             ring_topology->get_receiver(this->curr_receiver, direction);
         this->curr_sender = curr_receiver;
     }
+    ns3::OpticalRoutingHelper::setSwing(log2(nodes_in_ring));
 }
 
 int Swing::get_non_zero_latency_packets() {
@@ -275,7 +278,7 @@ bool Swing::stepReady() {
         Swing::allSwings.push_back(this);
     }
     if (stepBarrier[0] == 0) {
-        // ns3::OpticalRoutingHelper::update_next_hop_node_ids();
+        ns3::OpticalRoutingHelper::update_next_hop_node_ids();
         for (auto swinger : Swing::allSwings) {
             swinger->free_packets += 1;
             swinger->ready();

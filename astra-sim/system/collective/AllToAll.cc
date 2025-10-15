@@ -4,8 +4,13 @@ LICENSE file in the root directory of this source tree.
 *******************************************************************************/
 
 #include "astra-sim/system/collective/AllToAll.hh"
+#include <ns3/optical-routing-helper.h>
 
 using namespace AstraSim;
+
+
+int AllToAll::stepBarrier[1024] = {0};
+std::vector<AllToAll*> AllToAll::allAlltoAlls;
 
 AllToAll::AllToAll(ComType type,
                    int window,
@@ -17,6 +22,7 @@ AllToAll::AllToAll(ComType type,
     : Ring(type, id, allToAllTopology, data_size, direction, injection_policy) {
     this->name = Name::AllToAll;
     this->middle_point = nodes_in_ring - 1;
+    AllToAll::stepBarrier[0]++;
     if (window == -1) {
         parallel_reduce = nodes_in_ring - 1;
     } else {
@@ -29,18 +35,20 @@ AllToAll::AllToAll(ComType type,
 
 void AllToAll::run(EventType event, CallData* data) {
     if (event == EventType::General) {
-        free_packets += 1;
+        // free_packets += 1;
         if (comType == ComType::All_Reduce && stream_count <= middle_point) {
             if (total_packets_received < middle_point) {
                 return;
             }
-            for (int i = 0; i < parallel_reduce; i++) {
-                ready();
-            }
-            iteratable();
+            // for (int i = 0; i < parallel_reduce; i++) {
+            //     ready();
+            // }
+            // iteratable();
+            stepReady();
         } else {
-            ready();
-            iteratable();
+            // ready();
+            // iteratable();
+            stepReady();
         }
 
     } else if (event == EventType::PacketReceived) {
@@ -52,6 +60,29 @@ void AllToAll::run(EventType event, CallData* data) {
             insert_packet(nullptr);
         }
     }
+}
+
+bool AllToAll::stepReady() {
+    if (AllToAll::stepBarrier[0]>0) {
+        AllToAll::stepBarrier[0]--;
+        // std::cout << "alltoAll " <<  stepBarrier[0] << std::endl;
+        AllToAll::allAlltoAlls.push_back(this);
+    }
+    if (AllToAll::stepBarrier[0] == 0) {
+        ns3::OpticalRoutingHelper::update_next_hop_node_ids();
+        // std::cout << "size " << AllToAll::allAlltoAlls.size() << std::endl;
+        for (auto alltoall : AllToAll::allAlltoAlls) {
+            alltoall->free_packets += 1;
+            alltoall->ready();
+            alltoall->iteratable();
+        }
+        AllToAll::stepBarrier[0] = AllToAll::allAlltoAlls.size();
+        AllToAll::allAlltoAlls.clear();
+    }
+    else {
+        return false;
+    }
+    return true;
 }
 
 void AllToAll::process_max_count() {

@@ -5,15 +5,21 @@ N_CORES=$2
 # find the absolute path to this script
 source config.sh
 
-
-NODES=(4 8 16 32)
-MSG_SIZES=(32000000)
+NODES=(8 16 32 64 128 256)
+MSG_SIZES=(128 1000 16000 256000 4000000 64000000 256000000 1000000000)
 PROPAGATION_DELAY=("0.0005ms") # Put unit for the delays (ms)!!
 RECONFIG_DELAY=("0ns" "10ns" "100ns" "1000ns" "10000ns" "100000ns" "1000000ns") # Put unit for the reconfigs (ns)!!
-BANDWIDTH=("800Gbps") # Put unit for the bandwidth (Gbps)!!
-ALPHA_DELAY=(0) #units in ns!!!
+BANDWIDTH=("400Gbps" "800Gbps" "1600Gbps" "3200Gbps") # Put unit for the bandwidth (Gbps)!!
+ALPHA_DELAY=(0 10 100 10000) #units in ns!!!
 
-ALLREDUCE_ALGS=('halvingDoubling')
+# NODES=(16)
+# MSG_SIZES=(16000)
+# PROPAGATION_DELAY=("0.0005ms") # Put unit for the delays (ms)!!
+# RECONFIG_DELAY=("0ns") # Put unit for the reconfigs (ns)!!
+# BANDWIDTH=("400Gbps") # Put unit for the bandwidth (Gbps)!!
+# ALPHA_DELAY=(10) #units in ns!!!
+
+ALLREDUCE_ALGS=("halvingDoubling" "direct1" "swing")
 ALGS=("none")
 
 # Recompile ns3

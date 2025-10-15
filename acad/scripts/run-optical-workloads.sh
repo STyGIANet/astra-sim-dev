@@ -5,17 +5,25 @@ N_CORES=$2
 # find the absolute path to this script
 source config.sh
 
-NODES=(8 16 32 64)
-MSG_SIZES=(64 1000 160000 256000 4000000 64000000 1000000000)
-PROPAGATION_DELAY=("0.0005ms") # Put unit for the delays (ms)!!
+NODES=(8 16 32 64 128 256)
+MSG_SIZES=(128 1000 16000 256000 4000000 64000000 256000000 1000000000)
+PROPAGATION_DELAY=("0.0005ms" "0.00025ms") # Put unit for the delays (ms)!!
 RECONFIG_DELAY=("0ns" "10ns" "100ns" "1000ns" "10000ns" "100000ns" "1000000ns") # Put unit for the reconfigs (ns)!!
 BANDWIDTH=("400Gbps" "800Gbps" "1200Gbps" "3200Gbps") # Put unit for the bandwidth (Gbps)!!
-ALPHA_DELAY=(10 100 10000) #units in ns!!!
+ALPHA_DELAY=(0 10 100 10000) #units in ns!!!
 
-ALLREDUCE_ALGS=("halvingDoubling")
+# NODES=(16)
+# MSG_SIZES=(160000)
+# PROPAGATION_DELAY=("0.0005ms") # Put unit for the delays (ms)!!
+# RECONFIG_DELAY=("1000000ns") # Put unit for the reconfigs (ns)!!
+# BANDWIDTH=("400Gbps") # Put unit for the bandwidth (Gbps)!!
+# ALPHA_DELAY=(10) #units in ns!!!
+
+ALLREDUCE_ALGS=("halvingDoubling" "direct1" "swing")
 ALGS=("optical")
 # Recompile ns3
 cd ${SCRIPT_DIR}
+echo ${SCRIPT_DIR}
 # ./build-optical-interconnect.sh -l
 # ./build-optical-interconnect.sh -c
 ##############################################################################
@@ -71,7 +79,7 @@ for NODE in ${NODES[@]};do
 					MEMORY=${MEMORY_DIR}/remote_memory.json
 					LOGICAL_TOPOLOGY=${LOGICAL_TOPO_DIR}/logical-topo-$NUM_NODES.json
 					OUTPUT_FILE=${RESULTS_DIR}/AllReduce-$NUM_NODES-$MSG_SIZE-optical-ring-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALLREDUCE_ALG}-${ALPHA}ns-${PDELAY}-${BW}-${RECONF}.out
-					OPTICAL_ROUTING=${OPTICAL_ROUTING_DIR}/optical-ring-${NUM_NODES}-${MSG_SIZE}-${PDELAY}-${BW}-${RECONF}.txt
+					OPTICAL_ROUTING=${OPTICAL_ROUTING_DIR}/optical-ring-${NUM_NODES}-${MSG_SIZE}-${PDELAY}-${BW}-${RECONF}-${ALLREDUCE_ALG}.txt
 					cd ${PROJECT_DIR}
 					if [[ $EXP == 1 ]];then
 						(time "${NS3_DIR}"/build/scratch/ns3.42-AstraSimNetwork-optimized \
