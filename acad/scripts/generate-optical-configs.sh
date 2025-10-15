@@ -3,7 +3,7 @@
 # find the absolute path to this script
 source config.sh
 
-NODES=(32)
+NODES=(8 16 32)
 MSG_SIZES=(128 1000 16000 256000 4000000 64000000 256000000)
 # MSG_SIZES=(64 1000 160000 256000 4000000 64000000 1000000000)
 PROPAGATION_DELAY=("0.0005ms" "0.00025ms") # Put unit for the delays (ms)!!
