@@ -14,8 +14,6 @@ ALLREDUCE_ALGS=("halvingDoubling" "direct1" "swing")
 APP_LOADBALANCE_ALGS=("none")
 ROUTING_ALGS=("ECMP")
 
-K=8
-NODES_FT=512
 ## Hmm, it is probably better to generate these config files in-place in the respective scripts where needed.
 
 # First, generate txt workload files

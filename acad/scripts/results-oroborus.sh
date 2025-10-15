@@ -5,20 +5,18 @@
 source config.sh
 
 # ===== Configuration Variables (You can change these) =====
-NODES=(4 8 16 32)
-MSG_SIZES=(32000000)
+NODES=(8 16 32 64)
+MSG_SIZES=(128 1000 16000 256000 4000000 64000000 256000000 1000000000)
 PROPAGATION_DELAY=("0.0005ms") # Put unit for the delays (ms)!!
-RECONFIG_DELAY=("10ns") # Put unit for the reconfigs (ns)!!
-BANDWIDTH=("800Gbps") # Put unit for the bandwidth (Gbps)!!
-# Put unit for the bandwidth (Gbps)!!
-ALPHA_DELAY=(0) #units in ns!!!
-# NOTE: ALPHA_DELAY is defined but not used in the loops.
+RECONFIG_DELAY=("10ns" "100ns" "1000ns" "10000ns" "100000ns" "1000000ns") # Put unit for the reconfigs (ns)!!
+BANDWIDTH=("400Gbps" "800Gbps" "1600Gbps" "3200Gbps") # Put unit for the bandwidth (Gbps)!!
+ALPHA_DELAY=(10 100 10000) #units in ns!!!
 
-ALLREDUCE_ALGS=("halvingDoubling")
-ALGS=("none")
+ALLREDUCE_ALGS=("halvingDoubling" "swing")
+ALGS=("none" "optical")
 # Recompile ns3 (Assuming this is an external step)
 # make clean && make
-FILE="oroborus-test-results.txt" # change this
+FILE="oroborus-final-results.txt" # change this
 cd "${SCRIPT_DIR}" # Use quotes for safety
 echo "NUM_NODES,ALPHA,PDELAY,BW,RDELAY,TYPE-ALLREDUCE_ALG,MSG_SIZE,RECONFIG_COST,CCT/Time(ns)" > "${RESULTS_DIR}/oroborus/${FILE}" # Use quotes for safety
 ##############################################################################
