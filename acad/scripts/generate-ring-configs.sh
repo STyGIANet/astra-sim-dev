@@ -3,12 +3,12 @@
 # find the absolute path to this script
 source config.sh
 
-NODES=(8 16 32 64)
+NODES=(8 16 32)
 MSG_SIZES=(128 1000 16000 256000 4000000 64000000 256000000)
 PROPAGATION_DELAY=("0.0005ms") # Put unit for the delays (ms)!!
 RECONFIG_DELAY=("0ns" "10ns" "100ns" "1000ns" "10000ns" "100000ns" "1000000ns") # Put unit for the reconfigs (ns)!!
-BANDWIDTH=("400Gbps" "800Gbps" "1200Gbps" "3200Gbps") # Put unit for the bandwidth (Gbps)!!
-ALPHA_DELAY=(0 10 100 1000) #units in ns!!!
+BANDWIDTH=("800Gbps" "3200Gbps") # Put unit for the bandwidth (Gbps)!!
+ALPHA_DELAY=(100 10000) #units in ns!!!
 
 ALLREDUCE_ALGS=("halvingDoubling" "direct1" "swing")
 APP_LOADBALANCE_ALGS=("none")

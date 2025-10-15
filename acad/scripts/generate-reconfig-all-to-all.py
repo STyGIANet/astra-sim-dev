@@ -206,9 +206,7 @@ def main():
     file_name = "./../topo-reconfigs/"+"optical-ring-"+str(args.n)+"-"+str(int(args.m))+"-"+delta_str+"ms-"+str(int(bw))+"Gbps-"+reconf_str+"ns"+"-direct1"+".txt"
 
     with open(file_name, "w") as f:
-        f.write(f"Reconfiguration List: {finalReconfList}\n")
-        f.write("Total reconfig cost: "+str(len(finalReconfList)*reconf*1e9)+" ns\n")
-        f.write("\n".join(content))
-        f.write("\n".join(reverseContent))
+        output_content = f"Reconfiguration List: {finalReconfList}\n" + f"Total reconfig cost: "+str(len(finalReconfList)*reconf*1e9)+" ns\n" + f"\n".join(content) + f"\n".join(reverseContent)
+        f.write(output_content)
 if __name__ == "__main__":
     main()
