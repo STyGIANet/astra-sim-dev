@@ -159,22 +159,22 @@ def main():
         if step in finalReconfList:
             currState = step
             rho = np.sum([(-2)**i for i in range (0,step)])
-            print(rho,step)
+            # print(rho,step)
             for i in range(args.n):
                 # steps indexing from 0 in the print
                 # print(step-1, i, (i+2**(currState-1))%args.n)
                 if i%2==0:
                     content.append(f"{step-1} {i} {(((i+rho)%args.n))}")
-                    print(f"{step-1} {i} {(((i+rho)%args.n))}")
+                    # print(f"{step-1} {i} {(((i+rho)%args.n))}")
                     reverseContent.append(f"{2*s-step} {i} {(((i+rho)%args.n))}")
                 else:
                     content.append(f"{step-1} {i} {(((i-rho)%args.n))}")
-                    print(f"{step-1} {i} {(((i-rho)%args.n))}")
+                    # print(f"{step-1} {i} {(((i-rho)%args.n))}")
                     reverseContent.append(f"{2*s-step} {i} {(((i-rho)%args.n))}")
         else:
             for i in range(args.n):
                 content.append(f"{step-1} {i} {(i+1)%args.n}")
-                print(f"{step-1} {i} {(i+1)%args.n}")
+                # print(f"{step-1} {i} {(i+1)%args.n}")
                 reverseContent.append(f"{2*s-step} {i} {(i+1)%args.n}")
 
 

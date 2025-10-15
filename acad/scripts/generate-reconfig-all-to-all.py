@@ -158,15 +158,15 @@ def main():
         if step in finalReconfList:
             currState = step
             rho = step
-            print(rho,step)
+            # print(rho,step)
             for i in range(args.n):
                 content.append(f"{step-1} {i} {(((i+rho)%args.n))}")
-                print(f"{step-1} {i} {(((i+rho)%args.n))}")
+                # print(f"{step-1} {i} {(((i+rho)%args.n))}")
                 reverseContent.append(f"{2*s-step} {i} {(((i+rho)%args.n))}")
         else:
             for i in range(args.n):
                 content.append(f"{step-1} {i} {(i+1)%args.n}")
-                print(f"{step-1} {i} {(i+1)%args.n}")
+                # print(f"{step-1} {i} {(i+1)%args.n}")
                 reverseContent.append(f"{2*s-step} {i} {(i+1)%args.n}")
 
 
