@@ -307,7 +307,7 @@ bool Swing::ready() {
     snd_req.tag = stream->stream_id;
     snd_req.reqType = UINT8;
     snd_req.vnet = this->stream->current_queue_id;
-    if (id == 0) {
+    if (id >= 0) {
         std::cout << "sim sending from " << id << " " << snd_req.dstRank << " step " << total_packets_sent << " msg size " << packet.msg_size << std::endl;
         std::cout << "========== round finished ==============" << std::endl;
         std::cout << "---------- next round -------------" << std::endl;

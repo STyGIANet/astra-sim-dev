@@ -13,13 +13,13 @@ BANDWIDTH=("800Gbps" "3200Gbps") # Put unit for the bandwidth (Gbps)!!
 ALPHA_DELAY=(100 10000) #units in ns!!!
 ALLREDUCE_ALGS=("halvingDoubling" "direct1" "swing")
 
-# NODES=(32)
-# MSG_SIZES=(128)
+# NODES=(8)
+# MSG_SIZES=(16000)
 # PROPAGATION_DELAY=("0.0005ms") # Put unit for the delays (ms)!!
-# RECONFIG_DELAY=("1000000ns") # Put unit for the reconfigs (ns)!!
+# RECONFIG_DELAY=("100ns") # Put unit for the reconfigs (ns)!!
 # BANDWIDTH=("800Gbps") # Put unit for the bandwidth (Gbps)!!
 # ALPHA_DELAY=(100) #units in ns!!!
-# ALLREDUCE_ALGS=("halvingDoubling")
+# ALLREDUCE_ALGS=("swing")
 
 ALGS=("optical")
 # Recompile ns3
@@ -29,8 +29,8 @@ echo ${SCRIPT_DIR}
 # ./build-optical-interconnect.sh -c
 ##############################################################################
 # Allreduce across various message sizes, node sizes and propagation delay
+N=0
 for NODE in ${NODES[@]};do
-	N=0
 	NUM_NODES=$NODE
 	for MSG_SIZE in ${MSG_SIZES[@]};do
 		
@@ -90,8 +90,9 @@ for NODE in ${NODES[@]};do
 								--remote-memory-configuration=${MEMORY} \
 								--logical-topology-configuration=${LOGICAL_TOPOLOGY} \
 								--optical-routing-configuration=${OPTICAL_ROUTING} \
-								--comm-group-configuration=\"empty\" > ${OUTPUT_FILE} 2> ${OUTPUT_FILE}; echo $OUTPUT_FILE)&
-					sleep 2
+								--comm-group-configuration=\"empty\"  > ${OUTPUT_FILE} 2> ${OUTPUT_FILE}; echo $OUTPUT_FILE)&
+					sleep 3
+					echo ${OUTPUT_FILE}
 					fi
 					echo "$NETWORK"
 					N=$(( $N+1 ))
