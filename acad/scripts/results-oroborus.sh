@@ -5,18 +5,18 @@
 source config.sh
 
 # ===== Configuration Variables (You can change these) =====
-NODES=(8 16 32 64)
-MSG_SIZES=(128 1000 16000 256000 4000000 64000000 256000000 1000000000)
+NODES=(8)
+MSG_SIZES=(64000000)
 PROPAGATION_DELAY=("0.0005ms") # Put unit for the delays (ms)!!
-RECONFIG_DELAY=("10ns" "100ns" "1000ns" "10000ns" "100000ns" "1000000ns") # Put unit for the reconfigs (ns)!!
-BANDWIDTH=("400Gbps" "800Gbps" "1600Gbps" "3200Gbps") # Put unit for the bandwidth (Gbps)!!
-ALPHA_DELAY=(10 100 10000) #units in ns!!!
+RECONFIG_DELAY=("100000000ns") # Put unit for the reconfigs (ns)!!
+BANDWIDTH=("800Gbps") # Put unit for the bandwidth (Gbps)!!
+ALPHA_DELAY=(0) #units in ns!!!
 
-ALLREDUCE_ALGS=("halvingDoubling" "swing")
+ALLREDUCE_ALGS=("direct1")
 ALGS=("none" "optical")
 # Recompile ns3 (Assuming this is an external step)
 # make clean && make
-FILE="oroborus-final-results.txt" # change this
+FILE="oroborus-debug-results.txt" # change this
 cd "${SCRIPT_DIR}" # Use quotes for safety
 echo "NUM_NODES,ALPHA,PDELAY,BW,RDELAY,TYPE-ALLREDUCE_ALG,MSG_SIZE,RECONFIG_COST,CCT/Time(ns)" > "${RESULTS_DIR}/oroborus/${FILE}" # Use quotes for safety
 ##############################################################################
@@ -44,9 +44,9 @@ for ALG in "${ALGS[@]}"; do
         continue
     fi
     for ALLREDUCE_ALG in "${ALLREDUCE_ALGS[@]}"; do
-        if [[ "$ALLREDUCE_ALG" == "swing" && "$ALG" == "optical" ]]; then
-            continue 
-        fi
+        # if [[ "$ALLREDUCE_ALG" == "swing" && "$ALG" == "optical" ]]; then
+        #     continue 
+        # fi
     # FILE="oroborus-${TYPE}-${ALLREDUCE_ALG}-results.txt" # change this
     # echo "NUM_NODES,ALPHA,PDELAY,BW,RDELAY,TYPE-ALLREDUCE_ALG,MSG_SIZE,RECONFIG_COST,CCT/Time(ns)" > "${RESULTS_DIR}/oroborus/${FILE}" # Use quotes for safety
     for NUM_NODES in "${NODES[@]}"; do
@@ -60,7 +60,7 @@ for ALG in "${ALGS[@]}"; do
                 for BW in "${BANDWIDTH[@]}"; do
                 for ALPHA in "${ALPHA_DELAY[@]}"; do
                 for RECONF in "${RECONFIG_DELAY[@]}"; do
-                    RECONF_FILE="${OPTICAL_ROUTING_DIR}/${TOPO}-${NUM_NODES}-${MSG_SIZE}-${PDELAY}-${BW}-${RECONF}.txt"
+                    RECONF_FILE="${OPTICAL_ROUTING_DIR}/${TOPO}-${NUM_NODES}-${MSG_SIZE}-${PDELAY}-${BW}-${RECONF}-${ALLREDUCE_ALG}.txt"
                     FCT_FILE=""
                     if [[ "$TYPE" == "static" ]]; then
                         FCT_FILE="${RESULTS_DIR}/fct-${TOPO}-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALLREDUCE_ALG}-${MSG_SIZE}-${ALPHA}ns-${PDELAY}-${BW}.txt"
@@ -129,9 +129,9 @@ for ALG in ${ALGS[@]}; do
     fi
 
     for ALLREDUCE_ALG in ${ALLREDUCE_ALGS[@]};do
-        if [[ "$ALLREDUCE_ALG" == "swing" && "$ALG" == "optical" ]]; then
-            continue # Skip 'swing' when using 'optical'
-        fi
+        # if [[ "$ALLREDUCE_ALG" == "swing" && "$ALG" == "optical" ]]; then
+        #     continue # Skip 'swing' when using 'optical'
+        # fi
     # FILE="oroborus-${TYPE}-${ALLREDUCE_ALG}-results.txt" # change this
     # echo "NUM_NODES,ALPHA,PDELAY,BW,RDELAY,TYPE-ALLREDUCE_ALG,MSG_SIZE,RECONFIG_COST,CCT/Time(ns)" > "${RESULTS_DIR}/oroborus/${FILE}" # Use quotes for safety
     for NUM_NODES in ${NODES[@]}; do
@@ -151,7 +151,11 @@ for ALG in ${ALGS[@]}; do
                     RECONF_NUMERIC=${RECONF%ns} 
 
                     # Calculate the final RECONF_COST using pure integer arithmetic
-                    RECONF_COST=$(( LOG2_NODES * RECONF_NUMERIC * 2))
+                    if [[ "$ALLREDUCE_ALG" == "direct1" && "$ALG" == "optical" ]]; then
+                        RECONF_COST=$(( (NUM_NODES - 2) * RECONF_NUMERIC))
+                    else
+                        RECONF_COST=$(( LOG2_NODES * RECONF_NUMERIC * 2))
+                    fi
                                         
                     
                     echo "$NUM_NODES,${ALPHA}ns,$PDELAY,$BW,$RECONF,$TYPE-$ALLREDUCE_ALG,$MSG_SIZE,$RECONF_COST,$CCT" >> ${RESULTS_DIR}/oroborus/${FILE}

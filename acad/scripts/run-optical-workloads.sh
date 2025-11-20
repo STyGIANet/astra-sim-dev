@@ -5,13 +5,13 @@ N_CORES=$2
 # find the absolute path to this script
 source config.sh
 
-NODES=(8 16 32)
-MSG_SIZES=(128 1000 16000 256000 4000000 64000000 256000000)
+NODES=(8)
+MSG_SIZES=(64000000)
 PROPAGATION_DELAY=("0.0005ms") # Put unit for the delays (ms)!!
-RECONFIG_DELAY=("0ns" "10ns" "100ns" "1000ns" "10000ns" "100000ns" "1000000ns") # Put unit for the reconfigs (ns)!!
-BANDWIDTH=("800Gbps" "3200Gbps") # Put unit for the bandwidth (Gbps)!!
-ALPHA_DELAY=(100 10000) #units in ns!!!
-ALLREDUCE_ALGS=("halvingDoubling" "direct1" "swing")
+RECONFIG_DELAY=("100000000ns") # Put unit for the reconfigs (ns)!!
+BANDWIDTH=("800Gbps") # Put unit for the bandwidth (Gbps)!!
+ALPHA_DELAY=(0) #units in ns!!!
+ALGS=("direct1")
 
 # NODES=(8)
 # MSG_SIZES=(16000)
@@ -19,14 +19,14 @@ ALLREDUCE_ALGS=("halvingDoubling" "direct1" "swing")
 # RECONFIG_DELAY=("100ns") # Put unit for the reconfigs (ns)!!
 # BANDWIDTH=("800Gbps") # Put unit for the bandwidth (Gbps)!!
 # ALPHA_DELAY=(100) #units in ns!!!
-# ALLREDUCE_ALGS=("swing")
+# ALGS=("swing")
 
-ALGS=("optical")
+ROUTING_MODEL=("optical")
 # Recompile ns3
 cd ${SCRIPT_DIR}
 echo ${SCRIPT_DIR}
 # ./build-optical-interconnect.sh -l
-# ./build-optical-interconnect.sh -c
+./build-optical-interconnect.sh -c
 ##############################################################################
 # Allreduce across various message sizes, node sizes and propagation delay
 N=0
@@ -34,35 +34,40 @@ for NODE in ${NODES[@]};do
 	NUM_NODES=$NODE
 	for MSG_SIZE in ${MSG_SIZES[@]};do
 		
-		for ALG in ${ALGS[@]};do
+		for MODEL in ${ROUTING_MODEL[@]};do
 
-			if [[ $ALG == "ethereal" ]];then
+			if [[ $MODEL == "ethereal" ]];then
 				ROUTING="SOURCE_ROUTING"
 				APP_LOADBALANCE_ALG="ethereal"
-			elif [[ $ALG == "mp-rdma-2" ]];then
+			elif [[ $MODEL == "mp-rdma-2" ]];then
 				ROUTING="ECMP"
 				APP_LOADBALANCE_ALG="mp-rdma-2"
-			elif [[ $ALG == "mp-rdma-4" ]];then
+			elif [[ $MODEL == "mp-rdma-4" ]];then
 				ROUTING="ECMP"
 				APP_LOADBALANCE_ALG="mp-rdma-4"
-			elif [[ $ALG == "mp-rdma-8" ]];then
+			elif [[ $MODEL == "mp-rdma-8" ]];then
 				ROUTING="ECMP"
 				APP_LOADBALANCE_ALG="mp-rdma-8"
-			elif [[ $ALG == "reps" ]];then
+			elif [[ $MODEL == "reps" ]];then
 				ROUTING="REPS"
 				APP_LOADBALANCE_ALG="none"
-			elif [[ $ALG == "spray" ]];then
+			elif [[ $MODEL == "spray" ]];then
 				ROUTING="END_HOST_SPRAY"
 				APP_LOADBALANCE_ALG="none"
-			elif [[ $ALG == "optical" ]]; then
+			elif [[ $MODEL == "optical" ]]; then
 				ROUTING="OPTICAL"
 				APP_LOADBALANCE_ALG="none"
-			elif [[ $ALG == "none" ]]; then
+			elif [[ $MODEL == "none" ]]; then
 				ROUTING="ECMP"
 				APP_LOADBALANCE_ALG="none"
 			fi
 
-			for ALLREDUCE_ALG in ${ALLREDUCE_ALGS[@]};do
+			for ALG in ${ALGS[@]};do
+				if [[ $ALG =~ ^direct.* ]]; then
+					MYWORKLOAD="AlltoAll"
+				else
+					MYWORKLOAD="AllReduce"
+				fi
 
 				for ALPHA in ${ALPHA_DELAY[@]};do
 				for PDELAY in ${PROPAGATION_DELAY[@]};do
@@ -74,13 +79,13 @@ for NODE in ${NODES[@]};do
 						echo "running $N experiment(s)..."
 					done
 
-					WORKLOAD=${ET_WORKLOAD_DIR}/AllReduce-$NUM_NODES-$MSG_SIZE-optical-ring
-					SYSTEM=${SYSTEM_DIR}/system-$ALLREDUCE_ALG-$APP_LOADBALANCE_ALG-$ALPHA.json
-					NETWORK=${NETWORK_DIR}/config-optical-ring-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALLREDUCE_ALG}-${MSG_SIZE}-${ALPHA}ns-${PDELAY}-${BW}-${RECONF}.txt
+					WORKLOAD=${ET_WORKLOAD_DIR}/$MYWORKLOAD-$NUM_NODES-$MSG_SIZE-optical-ring
+					SYSTEM=${SYSTEM_DIR}/system-$ALG-$APP_LOADBALANCE_ALG-$ALPHA.json
+					NETWORK=${NETWORK_DIR}/config-optical-ring-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALG}-${MSG_SIZE}-${ALPHA}ns-${PDELAY}-${BW}-${RECONF}.txt
 					MEMORY=${MEMORY_DIR}/remote_memory.json
 					LOGICAL_TOPOLOGY=${LOGICAL_TOPO_DIR}/logical-topo-$NUM_NODES.json
-					OUTPUT_FILE=${RESULTS_DIR}/AllReduce-$NUM_NODES-$MSG_SIZE-optical-ring-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALLREDUCE_ALG}-${ALPHA}ns-${PDELAY}-${BW}-${RECONF}.out
-					OPTICAL_ROUTING=${OPTICAL_ROUTING_DIR}/optical-ring-${NUM_NODES}-${MSG_SIZE}-${PDELAY}-${BW}-${RECONF}-${ALLREDUCE_ALG}.txt
+					OUTPUT_FILE=${RESULTS_DIR}/$MYWORKLOAD-$NUM_NODES-$MSG_SIZE-optical-ring-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALG}-${ALPHA}ns-${PDELAY}-${BW}-${RECONF}.out
+					OPTICAL_ROUTING=${OPTICAL_ROUTING_DIR}/optical-ring-${NUM_NODES}-${MSG_SIZE}-${PDELAY}-${BW}-${RECONF}-${ALG}.txt
 					cd ${PROJECT_DIR}
 					if [[ $EXP == 1 ]];then
 						(time "${NS3_DIR}"/build/scratch/ns3.42-AstraSimNetwork-optimized \

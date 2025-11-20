@@ -85,6 +85,7 @@ def computeSchedule(s: int, k: int, m: int = 1, beta: float = 1.0, delta: float 
     # print(nxt)
     return DP[1][k], reconflist
 
+### Warning do not run this for an all reduce operation. This only works when we want to do all to all (or transpose operation) using the direct or direct1 algorithm
 def main():
     parser = argparse.ArgumentParser(description="DP for recursive doubling reconfiguration schedule.")
     group = parser.add_mutually_exclusive_group(required=True)
@@ -162,51 +163,19 @@ def main():
             for i in range(args.n):
                 content.append(f"{step-1} {i} {(((i+rho)%args.n))}")
                 # print(f"{step-1} {i} {(((i+rho)%args.n))}")
-                reverseContent.append(f"{2*s-step} {i} {(((i+rho)%args.n))}")
+                # reverseContent.append(f"{step - 1 + args.n - 1} {i} {(((i+rho)%args.n))}")
         else:
             for i in range(args.n):
                 content.append(f"{step-1} {i} {(i+1)%args.n}")
-                # print(f"{step-1} {i} {(i+1)%args.n}")
-                reverseContent.append(f"{2*s-step} {i} {(i+1)%args.n}")
+                # reverseContent.append(f"{step - 1 + args.n - 1} {i} {(i+1)%args.n}")
 
 
-    # # Reduction phase
-    # for step in range(s, 2*s):
-    #     # logical_step goes from s down to 1
-    #     logical_step = 2*s - step
-        
-    #     # Find the correct currState for this logical_step
-    #     currState = 1
-    #     found = 0
-    #     for reconf_step in finalReconfList:
-    #         if reconf_step <= logical_step:
-    #             currState = reconf_step
-    #             found = 1
-    #         else:
-    #             found = 0
-    #             break
-
-    #     if found==0:
-    #         for i in range(args.n):
-    #             # print(step, i, (i+2**(currState-1))%args.n)
-    #             content.append(f"{step-1} {i} {(i+1)%args.n}")
-    #     else:
-    #         rho = np.sum([(-2)**i for i in range (0,currState)])
-    #         for i in range(args.n):
-    #             # steps indexing from 0 in the print
-    #             # print(step-1, i, (i+2**(currState-1))%args.n)
-    #             if i%2:
-    #                 content.append(f"{step-1} {i} {(((i+rho)%args.n)+args.n)%args.n}")
-    #             else:
-    #                 content.append(f"{step-1} {i} {(((i-rho)%args.n)+args.n)%args.n}")
-
-    # print(finalTotalCost)
-
+    ### Warning do not run this for an all reduce operation. This only works when we want to do all to all (or transpose operation) using the direct1 algorithm
 
     file_name = "./../topo-reconfigs/"+"optical-ring-"+str(args.n)+"-"+str(int(args.m))+"-"+delta_str+"ms-"+str(int(bw))+"Gbps-"+reconf_str+"ns"+"-direct1"+".txt"
 
     with open(file_name, "w") as f:
-        output_content = f"Reconfiguration List: {finalReconfList}\n" + f"Total reconfig cost: "+str(len(finalReconfList)*reconf*1e9)+" ns\n" + f"\n".join(content) + f"\n" + f"\n".join(reversed(reverseContent))
+        output_content = f"Reconfiguration List: {finalReconfList}\n" + f"Total reconfig cost: "+str(len(finalReconfList)*reconf*1e9)+" ns\n" + f"\n".join(content)
         f.write(output_content)
 if __name__ == "__main__":
     main()

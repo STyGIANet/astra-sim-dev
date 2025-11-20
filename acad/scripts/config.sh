@@ -44,12 +44,12 @@ if [[ ! -d $OPTICAL_ROUTING_DIR ]]; then
 fi
 
 
-#cd $PROJECT_DIR
-#if [ -f ".venv/bin/activate" ]; then
+cd $PROJECT_DIR
+if [ -f ".venv/bin/activate" ]; then
 	# export VIRTUAL_ENV_DISABLE_PROMPT=1
-#	source .venv/bin/activate
-	#export PS1='[$(realpath --relative-to="$PROJECT_DIR" "$PWD")] astra-sim> '
-#fi
+	source .venv/bin/activate
+	# export PS1='[$(realpath --relative-to="$PROJECT_DIR" "$PWD")] astra-sim> '
+fi
 
 if [ -f "$HOME/.bashrc" ]; then
 	source ~/.bashrc
