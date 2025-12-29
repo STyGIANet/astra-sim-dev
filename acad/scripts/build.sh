@@ -11,12 +11,12 @@ SCRIPT_DIR=$(dirname "$(realpath $0)")
 ASTRA_SIM_DIR="${SCRIPT_DIR:?}"/../../astra-sim
 NS3_DIR="${SCRIPT_DIR:?}"/../../extern/network_backend/ns-3
 # Inputs - change as necessary.
-WORKLOAD=$(realpath "${SCRIPT_DIR:?}"/..)/et-workloads/AllReduce-256-4194304-leaf-spine # use chakra
-SYSTEM=$(realpath "${SCRIPT_DIR:?}"/../base-configs/system.json)
+WORKLOAD=$(realpath "${SCRIPT_DIR:?}"/..)/et-workloads/AllGather-8-1000000-ring # use chakra
+SYSTEM=$(realpath "${SCRIPT_DIR:?}"/../system-configs/system-halvingDoubling-none.json)
 MEMORY=$(realpath "${SCRIPT_DIR:?}"/../base-configs/remote_memory.json)
-LOGICAL_TOPOLOGY=$(realpath "${SCRIPT_DIR:?}"/../base-configs/logical-topo.json)
+LOGICAL_TOPOLOGY=$(realpath "${SCRIPT_DIR:?}"/../logical-topo-configs/logical-topo-8.json)
 # Note that ONLY this file is relative to NS3_DIR/simulation
-NETWORK=$(realpath "${SCRIPT_DIR:?}"/../base-configs/config.txt)
+NETWORK=$(realpath "${SCRIPT_DIR:?}"/../network-configs/config-ring-8-ECMP-none-halvingDoubling-1000000.txt)
 # Functions
 function setup {
     protoc et_def.proto\
