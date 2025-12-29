@@ -251,7 +251,8 @@ bool Ring::ready() {
     snd_req.tag = stream->stream_id;
     snd_req.reqType = UINT8;
     snd_req.vnet = this->stream->current_queue_id;
-    std::cout << "sim sending from " << id << " " << snd_req.dstRank << " step " << 2*(nodes_in_ring-1) - stream_count << std::endl;
+    if (id == 0)
+        std::cout << "sim sending from " << id << " " << snd_req.dstRank << " step " << 2*(nodes_in_ring-1) - stream_count << std::endl;
     stream->owner->front_end_sim_send(
         0, Sys::dummy_data, msg_size, UINT8, packet.preferred_dest,
         stream->stream_id, &snd_req, Sys::FrontEndSendRecvType::COLLECTIVE,

@@ -562,6 +562,8 @@ class ASTRASimNetwork : public AstraSim::AstraNetworkAPI {
                         Simulator::Schedule(NanoSeconds(delay),
                             [=]() { send_flow(src_tmp, dst_tmp, message_size_tmp, msg_handler_tmp, fun_arg_tmp, tag_tmp); });
                         // send_flow(src_id, dst_id, message_size, msg_handler, fun_arg, tag);
+                        // if (src_tmp == 0)
+                        //     std::cout << "Sending flow at " << Simulator::Now().GetNanoSeconds() << std::endl;
                     }
                     else{
                         Simulator::Schedule(
@@ -621,6 +623,9 @@ class ASTRASimNetwork : public AstraSim::AstraNetworkAPI {
                                               fun_arg_tmp,
                                               tag_tmp);
                                 });
+                                if (src_tmp == 0)
+                                    std::cout << "Sending flow at " << Simulator::Now().GetNanoSeconds() << std::endl;
+
                         }
                         flow_vec.clear();
                         send_flow_args.erase(dst);
@@ -843,6 +848,7 @@ int main(int argc, char* argv[]) {
 
     // Read network config and find logical dims.
     parse_args(argc, argv);
+    cout << optical_routing_configuration << endl;
     AstraSim::LoggerFactory::init(logging_configuration);
     read_logical_topo_config(logical_topology_configuration, logical_dims);
     if (optical_routing_configuration != "empty") {

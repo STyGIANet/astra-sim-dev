@@ -9,8 +9,8 @@ LICENSE file in the root directory of this source tree.
 using namespace AstraSim;
 
 
-int AllToAll::stepBarrier[1024] = {0};
-std::vector<AllToAll*> AllToAll::allAlltoAlls;
+// int AllToAll::stepBarrier[1024] = {0};
+// std::vector<AllToAll*> AllToAll::allAlltoAlls;
 
 AllToAll::AllToAll(ComType type,
                    int window,
@@ -22,7 +22,7 @@ AllToAll::AllToAll(ComType type,
     : Ring(type, id, allToAllTopology, data_size, direction, injection_policy) {
     this->name = Name::AllToAll;
     this->middle_point = nodes_in_ring - 1;
-    AllToAll::stepBarrier[0]++;
+    // AllToAll::stepBarrier[0]++;
     if (window == -1) {
         parallel_reduce = nodes_in_ring - 1;
     } else {
@@ -31,12 +31,14 @@ AllToAll::AllToAll(ComType type,
     if (type == ComType::All_to_All) {
         this->stream_count = nodes_in_ring - 1;
     }
+    // comType = ComType::All_Reduce;
 }
 
 void AllToAll::run(EventType event, CallData* data) {
     if (event == EventType::General) {
         // free_packets += 1;
         if (comType == ComType::All_Reduce && stream_count <= middle_point) {
+            std::cout << "should not be here" << std::endl;
             if (total_packets_received < middle_point) {
                 return;
             }
@@ -63,21 +65,21 @@ void AllToAll::run(EventType event, CallData* data) {
 }
 
 bool AllToAll::stepReady() {
-    if (AllToAll::stepBarrier[0]>0) {
-        AllToAll::stepBarrier[0]--;
+    if (Ring::stepBarrier[0]>0) {
+        Ring::stepBarrier[0]--;
         // std::cout << "alltoAll " <<  stepBarrier[0] << std::endl;
-        AllToAll::allAlltoAlls.push_back(this);
+        Ring::allRings.push_back(this);
     }
-    if (AllToAll::stepBarrier[0] == 0) {
+    if (Ring::stepBarrier[0] == 0) {
         ns3::OpticalRoutingHelper::update_next_hop_node_ids();
-        // std::cout << "size " << AllToAll::allAlltoAlls.size() << std::endl;
-        for (auto alltoall : AllToAll::allAlltoAlls) {
+        std::cout << "size " << Ring::allRings.size() << std::endl;
+        for (auto alltoall : Ring::allRings) {
             alltoall->free_packets += 1;
             alltoall->ready();
             alltoall->iteratable();
         }
-        AllToAll::stepBarrier[0] = AllToAll::allAlltoAlls.size();
-        AllToAll::allAlltoAlls.clear();
+        Ring::stepBarrier[0] = Ring::allRings.size();
+        Ring::allRings.clear();
     }
     else {
         return false;

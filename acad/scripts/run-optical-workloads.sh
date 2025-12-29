@@ -5,13 +5,13 @@ N_CORES=$2
 # find the absolute path to this script
 source config.sh
 
-NODES=(8)
-MSG_SIZES=(64000000)
+NODES=(8 16 32 64) 
+MSG_SIZES=(128 1000 16000 256000 4000000 64000000 256000000 512000000 1000000000)
 PROPAGATION_DELAY=("0.0005ms") # Put unit for the delays (ms)!!
-RECONFIG_DELAY=("100000000ns") # Put unit for the reconfigs (ns)!!
-BANDWIDTH=("800Gbps") # Put unit for the bandwidth (Gbps)!!
-ALPHA_DELAY=(0) #units in ns!!!
-ALGS=("direct1")
+RECONFIG_DELAY=("0ns" "10ns" "100ns" "1000ns" "10000ns" "100000ns" "1000000ns") # Put unit for the reconfigs (ns)!!
+BANDWIDTH=("400Gbps" "800Gbps" "1600Gbps" "3200Gbps") # Put unit for the bandwidth (Gbps)!!
+ALPHA_DELAY=(0 10 100 1000 10000) #units in ns!!!
+ALGS=("halvingDoubling" "swing" "direct1")
 
 # NODES=(8)
 # MSG_SIZES=(16000)
@@ -26,7 +26,7 @@ ROUTING_MODEL=("optical")
 cd ${SCRIPT_DIR}
 echo ${SCRIPT_DIR}
 # ./build-optical-interconnect.sh -l
-./build-optical-interconnect.sh -c
+# ./build-optical-interconnect.sh -c
 ##############################################################################
 # Allreduce across various message sizes, node sizes and propagation delay
 N=0
