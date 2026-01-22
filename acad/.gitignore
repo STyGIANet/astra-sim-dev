@@ -14,4 +14,6 @@ system-configs/
 network-topologies/
 topo-reconfigs/
 collectives/
+gurobi.lic
+*tar.gz
 *.log
