@@ -13,4 +13,5 @@ memory-configs/
 system-configs/
 network-topologies/
 topo-reconfigs/
+collectives/
 *.log
