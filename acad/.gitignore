@@ -12,7 +12,7 @@ network-configs/
 memory-configs/
 system-configs/
 network-topologies/
-topo-reconfigs/
+reconfigurable-topologies/
 collectives/
 gurobi.lic
 *tar.gz
