@@ -33,3 +33,5 @@ runs
 
 # param
 extern/graph_frontend/param/
+
+gurobi.lic
