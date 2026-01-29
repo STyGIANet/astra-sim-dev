@@ -84,6 +84,31 @@ RUN pip3 install protobuf==5.${PROTOBUF_VER}
 ENV PROTOBUF_FROM_SOURCE=True
 ### ======================================================
 
+RUN pip3 uninstall -y chakra protobuf
+RUN pip3 install protobuf==6.31.1
+
+ARG GUROBI_VER=13.0.0
+
+# Download and extract
+WORKDIR /opt
+RUN wget https://packages.gurobi.com/13.0/gurobi${GUROBI_VER}_linux64.tar.gz && \
+    tar xzf gurobi${GUROBI_VER}_linux64.tar.gz && \
+    rm gurobi${GUROBI_VER}_linux64.tar.gz
+
+# Set environment variables
+ENV GUROBI_HOME=/opt/gurobi1300/linux64
+ENV PATH="${PATH}:${GUROBI_HOME}/bin"
+ENV LD_LIBRARY_PATH="${GUROBI_HOME}/lib"
+
+# License setup
+COPY gurobi.lic /opt/gurobi1300/gurobi.lic
+ENV GRB_LICENSE_FILE=/opt/gurobi1300/gurobi.lic
+### ======================================================
+
+RUN wget https://github.com/nlohmann/json/releases/download/v3.11.3/json.hpp && \
+    mkdir -p /usr/local/include/nlohmann && \
+    mv json.hpp /usr/local/include/nlohmann/
+
 
 ### ================== Finalize ==========================
 ## Move to the application directory

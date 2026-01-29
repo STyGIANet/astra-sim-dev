@@ -5,59 +5,63 @@ N_CORES=$2
 # find the absolute path to this script
 source config.sh
 
-NODES=(8 16 32 64) 
-MSG_SIZES=(128 1000 16000 256000 4000000 64000000 256000000 512000000 1000000000)
-PROPAGATION_DELAY=("0.0005ms") # Put unit for the delays (ms)!!
-RECONFIG_DELAY=("0ns" "10ns" "100ns" "1000ns" "10000ns" "100000ns" "1000000ns") # Put unit for the reconfigs (ns)!!
-BANDWIDTH=("400Gbps" "800Gbps" "1600Gbps" "3200Gbps") # Put unit for the bandwidth (Gbps)!!
-ALPHA_DELAY=(0 10 100 1000 10000) #units in ns!!!
-ALGS=("halvingDoubling" "swing" "direct1")
+NODES=(64)
+MSG_SIZES=(1024 16384 262144 4194304 67108864 268435456 536870912 1073741824)
 
-# NODES=(8)
-# MSG_SIZES=(16000)
-# PROPAGATION_DELAY=("0.0005ms") # Put unit for the delays (ms)!!
-# RECONFIG_DELAY=("100ns") # Put unit for the reconfigs (ns)!!
-# BANDWIDTH=("800Gbps") # Put unit for the bandwidth (Gbps)!!
-# ALPHA_DELAY=(100) #units in ns!!!
-# ALGS=("swing")
+MSG_NAMES=(1KB 16KB 256KB 4MB 64MB 256MB 512MB 1GB)
+RECONFIG_DELAYS=(0 10 100 1000 10000 100000 1000000) # in ns!!
+BANDWIDTHS=(800) # Put unit for the bandwidth (Gbps)!!
+## These are pairs:
+ALPHA_DELAYS=(1000) #units in ns!!!
+PDELAYS=(1000)
+ALGS=(halvingDoubling)
+ALGS_TOPO=(all-reduce-rd-nd)
+PORT=1
+RELAXATION=0
+LOGGING=0
+RD=0
 
-ROUTING_MODEL=("optical")
+APP_LOADBALANCE_ALGS=(none)
+ROUTING_ALGS=(OPTICAL)
+RUN_BVN=1
+RUN_STATIC=1
+RUN_HARVEST=1
+
 # Recompile ns3
 cd ${SCRIPT_DIR}
 echo ${SCRIPT_DIR}
 # ./build-optical-interconnect.sh -l
 # ./build-optical-interconnect.sh -c
 ##############################################################################
-# Allreduce across various message sizes, node sizes and propagation delay
-N=0
+N=0 # Experiment count
+## This run is for Harvest
+if [ "$RUN_HARVEST" -eq 1 ]; then
 for NODE in ${NODES[@]};do
-	NUM_NODES=$NODE
-	for MSG_SIZE in ${MSG_SIZES[@]};do
-		
-		for MODEL in ${ROUTING_MODEL[@]};do
+	for MSG_NAME in ${MSG_NAMES[@]};do
+		for MODEL in ${ROUTING_ALGS[@]};do
 
-			if [[ $MODEL == "ethereal" ]];then
+			if [[ ${MODEL,,} == "ethereal" ]];then
 				ROUTING="SOURCE_ROUTING"
 				APP_LOADBALANCE_ALG="ethereal"
-			elif [[ $MODEL == "mp-rdma-2" ]];then
+			elif [[ ${MODEL,,} == "mp-rdma-2" ]];then
 				ROUTING="ECMP"
 				APP_LOADBALANCE_ALG="mp-rdma-2"
-			elif [[ $MODEL == "mp-rdma-4" ]];then
+			elif [[ ${MODEL,,} == "mp-rdma-4" ]];then
 				ROUTING="ECMP"
 				APP_LOADBALANCE_ALG="mp-rdma-4"
-			elif [[ $MODEL == "mp-rdma-8" ]];then
+			elif [[ ${MODEL,,} == "mp-rdma-8" ]];then
 				ROUTING="ECMP"
 				APP_LOADBALANCE_ALG="mp-rdma-8"
-			elif [[ $MODEL == "reps" ]];then
+			elif [[ ${MODEL,,} == "reps" ]];then
 				ROUTING="REPS"
 				APP_LOADBALANCE_ALG="none"
-			elif [[ $MODEL == "spray" ]];then
+			elif [[ ${MODEL,,} == "spray" ]];then
 				ROUTING="END_HOST_SPRAY"
 				APP_LOADBALANCE_ALG="none"
-			elif [[ $MODEL == "optical" ]]; then
+			elif [[ ${MODEL,,} == "optical" ]]; then
 				ROUTING="OPTICAL"
 				APP_LOADBALANCE_ALG="none"
-			elif [[ $MODEL == "none" ]]; then
+			elif [[ ${MODEL,,} == "none" ]]; then
 				ROUTING="ECMP"
 				APP_LOADBALANCE_ALG="none"
 			fi
@@ -69,23 +73,120 @@ for NODE in ${NODES[@]};do
 					MYWORKLOAD="AllReduce"
 				fi
 
-				for ALPHA in ${ALPHA_DELAY[@]};do
-				for PDELAY in ${PROPAGATION_DELAY[@]};do
-				for BW in ${BANDWIDTH[@]};do
-				for RECONF in ${RECONFIG_DELAY[@]};do
+				if [[ ${ALG} == "swing" ]]; then
+					PORT=2
+				else
+					PORT=1
+				fi
+				for ALPHA_DELTA_ID in ${!ALPHA_DELAYS[@]};do
+					ALPHA=${ALPHA_DELAYS[$ALPHA_DELTA_ID]}
+					PDELAY=${PDELAYS[$ALPHA_DELTA_ID]}
+				for BW in ${BANDWIDTHS[@]};do
+				for RECONF in ${RECONFIG_DELAYS[@]};do
 
 					while [[ $(( $(ps aux | grep AstraSimNetwork-optimized | wc -l) )) -gt $N_CORES ]];do
 						sleep 30;
 						echo "running $N experiment(s)..."
-					done
+					done 						
 
-					WORKLOAD=${ET_WORKLOAD_DIR}/$MYWORKLOAD-$NUM_NODES-$MSG_SIZE-optical-ring
+
+					WORKLOAD=${ET_WORKLOAD_DIR}/$MYWORKLOAD-$NODE-$MSG_NAME-optical
 					SYSTEM=${SYSTEM_DIR}/system-$ALG-$APP_LOADBALANCE_ALG-$ALPHA.json
-					NETWORK=${NETWORK_DIR}/config-optical-ring-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALG}-${MSG_SIZE}-${ALPHA}ns-${PDELAY}-${BW}-${RECONF}.txt
+					NETWORK=${NETWORK_DIR}/config-optical-${NODE}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALG}-${MSG_NAME}-${ALPHA}-${PDELAY}-${BW}-${RECONF}.txt
 					MEMORY=${MEMORY_DIR}/remote_memory.json
-					LOGICAL_TOPOLOGY=${LOGICAL_TOPO_DIR}/logical-topo-$NUM_NODES.json
-					OUTPUT_FILE=${RESULTS_DIR}/$MYWORKLOAD-$NUM_NODES-$MSG_SIZE-optical-ring-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALG}-${ALPHA}ns-${PDELAY}-${BW}-${RECONF}.out
-					OPTICAL_ROUTING=${OPTICAL_ROUTING_DIR}/optical-ring-${NUM_NODES}-${MSG_SIZE}-${PDELAY}-${BW}-${RECONF}-${ALG}.txt
+					LOGICAL_TOPOLOGY=${LOGICAL_TOPO_DIR}/logical-topo-$NODE.json
+					OUTPUT_FILE=${RESULTS_DIR}/$MYWORKLOAD-$NODE-$MSG_NAME-harvest-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALG}-${ALPHA}-${PDELAY}-${BW}-${RECONF}.out
+					OPTICAL_ROUTING=${OPTICAL_ROUTING_DIR}/harvest-$ALG-$NODE-$PORT-${MSG_NAME}-$BW-$ALPHA-$PDELAY-${RECONF}-$RELAXATION.json
+					cd ${PROJECT_DIR}
+					if [[ $EXP == 1 ]];then
+						(time "${NS3_DIR}"/build/scratch/ns3.42-AstraSimNetwork-optimized \
+								--workload-configuration=${WORKLOAD} \
+								--system-configuration=${SYSTEM} \
+								--network-configuration=${NETWORK} \
+								--remote-memory-configuration=${MEMORY} \
+								--logical-topology-configuration=${LOGICAL_TOPOLOGY} \
+								--optical-routing-configuration=${OPTICAL_ROUTING} \
+								--comm-group-configuration=\"empty\"  > ${OUTPUT_FILE} 2>&1; echo $OUTPUT_FILE)&
+					sleep 3
+					echo ${OUTPUT_FILE}
+					fi
+					echo "$NETWORK"
+					N=$(( $N+1 ))
+				done
+				done
+				done
+			done
+		done
+	done
+done
+
+echo "Total $N experiments..."
+fi
+
+
+# This is for static
+if [ "$RUN_STATIC" -eq 1 ]; then
+for NODE in ${NODES[@]};do
+	for MSG_NAME in ${MSG_NAMES[@]};do
+		
+		for MODEL in ${ROUTING_ALGS[@]};do
+
+			if [[ ${MODEL,,} == "ethereal" ]];then
+				ROUTING="SOURCE_ROUTING"
+				APP_LOADBALANCE_ALG="ethereal"
+			elif [[ ${MODEL,,} == "mp-rdma-2" ]];then
+				ROUTING="ECMP"
+				APP_LOADBALANCE_ALG="mp-rdma-2"
+			elif [[ ${MODEL,,} == "mp-rdma-4" ]];then
+				ROUTING="ECMP"
+				APP_LOADBALANCE_ALG="mp-rdma-4"
+			elif [[ ${MODEL,,} == "mp-rdma-8" ]];then
+				ROUTING="ECMP"
+				APP_LOADBALANCE_ALG="mp-rdma-8"
+			elif [[ ${MODEL,,} == "reps" ]];then
+				ROUTING="REPS"
+				APP_LOADBALANCE_ALG="none"
+			elif [[ ${MODEL,,} == "spray" ]];then
+				ROUTING="END_HOST_SPRAY"
+				APP_LOADBALANCE_ALG="none"
+			elif [[ ${MODEL,,} == "optical" ]]; then
+				ROUTING="OPTICAL"
+				APP_LOADBALANCE_ALG="none"
+			elif [[ ${MODEL,,} == "none" ]]; then
+				ROUTING="ECMP"
+				APP_LOADBALANCE_ALG="none"
+			fi
+
+			for ALG in ${ALGS[@]};do
+				if [[ $ALG =~ ^direct.* ]]; then
+					MYWORKLOAD="AlltoAll"
+				else
+					MYWORKLOAD="AllReduce"
+				fi
+
+				if [[ ${ALG} == "swing" ]]; then
+					PORT=2
+				else
+					PORT=1
+				fi
+				for ALPHA_DELTA_ID in ${!ALPHA_DELAYS[@]};do
+					ALPHA=${ALPHA_DELAYS[$ALPHA_DELTA_ID]}
+					PDELAY=${PDELAYS[$ALPHA_DELTA_ID]}
+				for BW in ${BANDWIDTHS[@]};do
+
+					while [[ $(( $(ps aux | grep AstraSimNetwork-optimized | wc -l) )) -gt $N_CORES ]];do
+						sleep 30;
+						echo "running $N experiment(s)..."
+					done 						
+
+
+					WORKLOAD=${ET_WORKLOAD_DIR}/$MYWORKLOAD-$NODE-$MSG_NAME-optical
+					SYSTEM=${SYSTEM_DIR}/system-$ALG-$APP_LOADBALANCE_ALG-$ALPHA.json
+					NETWORK=${NETWORK_DIR}/config-static-${NODE}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALG}-${MSG_NAME}-${ALPHA}-${PDELAY}-${BW}.txt # reconf is 0 just so we dont run it more than we need to
+					MEMORY=${MEMORY_DIR}/remote_memory.json
+					LOGICAL_TOPOLOGY=${LOGICAL_TOPO_DIR}/logical-topo-$NODE.json
+					OUTPUT_FILE=${RESULTS_DIR}/$MYWORKLOAD-$NODE-$MSG_NAME-static-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALG}-${ALPHA}-${PDELAY}-${BW}.out
+					OPTICAL_ROUTING=${OPTICAL_ROUTING_DIR}/static-$ALG-$NODE-$PORT.json
 					cd ${PROJECT_DIR}
 					if [[ $EXP == 1 ]];then
 						(time "${NS3_DIR}"/build/scratch/ns3.42-AstraSimNetwork-optimized \
@@ -103,12 +204,96 @@ for NODE in ${NODES[@]};do
 					N=$(( $N+1 ))
 				done
 				done
+			done
+		done
+	done
+done
+fi
+
+# This is for bvn
+if [ "$RUN_BVN" -eq 1 ]; then
+for NODE in ${NODES[@]};do
+	NUM_NODES=$NODE
+	for MSG_NAME in ${MSG_NAMES[@]};do
+		
+		for MODEL in ${ROUTING_ALGS[@]};do
+
+			if [[ ${MODEL,,} == "ethereal" ]];then
+				ROUTING="SOURCE_ROUTING"
+				APP_LOADBALANCE_ALG="ethereal"
+			elif [[ ${MODEL,,} == "mp-rdma-2" ]];then
+				ROUTING="ECMP"
+				APP_LOADBALANCE_ALG="mp-rdma-2"
+			elif [[ ${MODEL,,} == "mp-rdma-4" ]];then
+				ROUTING="ECMP"
+				APP_LOADBALANCE_ALG="mp-rdma-4"
+			elif [[ ${MODEL,,} == "mp-rdma-8" ]];then
+				ROUTING="ECMP"
+				APP_LOADBALANCE_ALG="mp-rdma-8"
+			elif [[ ${MODEL,,} == "reps" ]];then
+				ROUTING="REPS"
+				APP_LOADBALANCE_ALG="none"
+			elif [[ ${MODEL,,} == "spray" ]];then
+				ROUTING="END_HOST_SPRAY"
+				APP_LOADBALANCE_ALG="none"
+			elif [[ ${MODEL,,} == "optical" ]]; then
+				ROUTING="OPTICAL"
+				APP_LOADBALANCE_ALG="none"
+			elif [[ ${MODEL,,} == "none" ]]; then
+				ROUTING="ECMP"
+				APP_LOADBALANCE_ALG="none"
+			fi
+
+			for ALG in ${ALGS[@]};do
+				if [[ $ALG =~ ^direct.* ]]; then
+					MYWORKLOAD="AlltoAll"
+				else
+					MYWORKLOAD="AllReduce"
+				fi
+
+				if [[ ${ALG} == "swing" ]]; then
+					PORT=2
+				else
+					PORT=1
+				fi
+				for ALPHA_DELTA_ID in ${!ALPHA_DELAYS[@]};do
+					ALPHA=${ALPHA_DELAYS[$ALPHA_DELTA_ID]}
+					PDELAY=${PDELAYS[$ALPHA_DELTA_ID]}
+				for BW in ${BANDWIDTHS[@]};do
+				RECONF=0
+
+					while [[ $(( $(ps aux | grep AstraSimNetwork-optimized | wc -l) )) -gt $N_CORES ]];do
+						sleep 30;
+						echo "running $N experiment(s)..."
+					done 						
+
+
+					WORKLOAD=${ET_WORKLOAD_DIR}/$MYWORKLOAD-$NODE-$MSG_NAME-optical
+					SYSTEM=${SYSTEM_DIR}/system-$ALG-$APP_LOADBALANCE_ALG-$ALPHA.json
+					NETWORK=${NETWORK_DIR}/config-bvn-${NODE}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALG}-${MSG_NAME}-${ALPHA}-${PDELAY}-${BW}-${RECONF}.txt
+					MEMORY=${MEMORY_DIR}/remote_memory.json
+					LOGICAL_TOPOLOGY=${LOGICAL_TOPO_DIR}/logical-topo-$NODE.json
+					OUTPUT_FILE=${RESULTS_DIR}/$MYWORKLOAD-$NODE-$MSG_NAME-bvn-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALG}-${ALPHA}-${PDELAY}-${BW}-${RECONF}.out
+					OPTICAL_ROUTING=${OPTICAL_ROUTING_DIR}/bvn-$ALG-$NODE-$PORT-$RECONF.json
+					cd ${PROJECT_DIR}
+					if [[ $EXP == 1 ]];then
+						(time "${NS3_DIR}"/build/scratch/ns3.42-AstraSimNetwork-optimized \
+								--workload-configuration=${WORKLOAD} \
+								--system-configuration=${SYSTEM} \
+								--network-configuration=${NETWORK} \
+								--remote-memory-configuration=${MEMORY} \
+								--logical-topology-configuration=${LOGICAL_TOPOLOGY} \
+								--optical-routing-configuration=${OPTICAL_ROUTING} \
+								--comm-group-configuration=\"empty\"  > ${OUTPUT_FILE} 2> ${OUTPUT_FILE}; echo $OUTPUT_FILE)&
+					sleep 3
+					echo ${OUTPUT_FILE}
+					fi
+					echo "$NETWORK"
+					N=$(( $N+1 ))
 				done
 				done
 			done
 		done
 	done
 done
-
-echo "Total $N experiments..."
-	
+fi	

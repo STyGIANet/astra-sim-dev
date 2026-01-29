@@ -11,7 +11,7 @@ SYSTEM_DIR="${PROJECT_DIR:?}/acad/system-configs"
 NETWORK_TOPO_DIR="${PROJECT_DIR:?}/acad/network-topologies"
 RESULTS_DIR="${PROJECT_DIR:?}/acad/results"
 BASE_CONFIG_DIR="${PROJECT_DIR:?}/acad/base-configs"
-OPTICAL_ROUTING_DIR="${PROJECT_DIR:?}/acad/topo-reconfigs"
+OPTICAL_ROUTING_DIR="${PROJECT_DIR:?}/acad/reconfigurable-topologies"
 
 NS3_DIR=$(realpath "${SCRIPT_DIR:?}"/../..)/extern/network_backend/ns-3
 
