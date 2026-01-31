@@ -848,15 +848,9 @@ int main(int argc, char* argv[]) {
 
     // Read network config and find logical dims.
     parse_args(argc, argv);
-    cout << optical_routing_configuration << endl;
     AstraSim::LoggerFactory::init(logging_configuration);
     read_logical_topo_config(logical_topology_configuration, logical_dims);
-    if (optical_routing_configuration != "empty") {
-        if (auto ok = setup_optical_routing(optical_routing_configuration); ok == -1) {
-            std::cerr << "Failed to setup optical routing." << std::endl;
-            return -1;
-        }
-    }
+
     // Setup network & System layer.
     vector<ASTRASimNetwork*> networks(num_npus, nullptr);
     vector<AstraSim::Sys*> systems(num_npus, nullptr);
@@ -883,6 +877,15 @@ int main(int argc, char* argv[]) {
     if (auto ok = setup_ns3_simulation(network_configuration); ok == -1) {
         std::cerr << "Fail to setup ns3 simulation." << std::endl;
         return -1;
+    }
+
+    // Set up optical routing
+    cout << optical_routing_configuration << endl;
+    if (optical_routing_configuration != "empty") {
+        if (auto ok = setup_optical_routing(optical_routing_configuration, system_configuration); ok == -1) {
+            std::cerr << "Failed to setup optical routing." << std::endl;
+            return -1;
+        }
     }
 
     for (int i = 0; i < num_npus; i++) {

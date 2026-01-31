@@ -14,8 +14,8 @@ LABEL maintainer="Jinsun Yoo <jinsun@gatech.edu>"
 ### ================== System Setups ======================
 ## Install System Dependencies
 ENV DEBIAN_FRONTEND=noninteractive
-RUN apt -y update
-RUN apt -y install \
+RUN apt-get -y update
+RUN apt-get -y install \
     coreutils wget vim git \
     gcc g++ clang-format \
     make cmake \

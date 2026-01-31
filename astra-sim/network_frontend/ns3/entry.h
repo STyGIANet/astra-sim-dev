@@ -19,7 +19,7 @@
 #include <ns3/rdma.h>
 #include <ns3/sim-setting.h>
 #include <ns3/switch-node.h>
-#include <ns3/optical-routing-helper.h>
+#include "ns3/optical-routing-helper.h"
 #include <time.h>
 #include <unordered_map>
 
@@ -353,6 +353,18 @@ int setup_ns3_simulation(string network_configuration) {
 
 }
 
-int setup_optical_routing(string optical_routing_configuration) {
-  return ns3::OpticalRoutingHelper::read_optical_routing_config(optical_routing_configuration) == true ? 0 : -1;
+int setup_optical_routing(string optical_routing_configuration, string system_configuration) {
+  std::ifstream file(system_configuration);
+  if (!file) {
+      std::cerr << "Cannot open file\n";
+      return false;
+  }
+  bool found = false;
+  std::string line;
+  while (std::getline(file, line)) {
+      if (line.find("swing") != std::string::npos) {
+          found = true;
+      }
+  }
+  return ns3::OpticalRoutingHelper::read_optical_routing_config(optical_routing_configuration, found, n) == true ? 0 : -1;
 }

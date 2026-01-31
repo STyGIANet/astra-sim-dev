@@ -8,7 +8,6 @@ LICENSE file in the root directory of this source tree.
 #include <cmath>
 #include <iostream>
 
-#include "astra-sim/common/Logging.hh"
 #include "astra-sim/system/PacketBundle.hh"
 #include "astra-sim/system/RecvPacketEventHandlerData.hh"
 #include <ns3/optical-routing-helper.h>
@@ -78,10 +77,9 @@ Swing::Swing(ComType type,
         this->offset_multiplier = 2;
         break;
     default:
-        LoggerFactory::get_logger("system::collective::Swing")
-            ->critical(
+        std::cout <<
                 "######### Exiting because of unknown communication type for "
-                "Swing collective algorithm #########");
+                << "Swing collective algorithm #########" << std::endl;
         std::exit(1);
     }
     RingTopology::Direction direction = specify_direction();
