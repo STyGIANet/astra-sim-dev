@@ -44,7 +44,7 @@ def parse_filename(filename):
 def main():
     matplotlib.rcParams.update({'font.size': 40})
     if len(sys.argv) < 2:
-        print("Usage: python generate_heatmap.py <filename.csv>")
+        print("Usage: python generate-fig5-heatmap.py <filename.csv>")
         sys.exit(1)
 
     file_path = sys.argv[1]

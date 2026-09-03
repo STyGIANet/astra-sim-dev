@@ -2,7 +2,7 @@
 
 source config.sh
 
-HEATMAP_DIR=${RESULTS_DIR}/harvest
+HEATMAP_DIR=${RESULTS_DIR}/harvest/fig5
 
 NODES=(64)
 BANDWIDTHS=(800) 
@@ -27,7 +27,7 @@ for NODE in ${NODES[@]}; do
                 FILE=${HEATMAP_DIR}/${NODE}-${ALG}-${BW}-${ALPHA}-${PDELAY}.csv
                 
                 if [[ -f "$FILE" ]]; then
-                    python ${SCRIPT_DIR}/generate_best_heatmap.py "$FILE"
+                    python ${SCRIPT_DIR}/generate-fig5-heatmap.py "$FILE"
                 else
                     echo "Warning: $FILE not found, skipping."
                 fi

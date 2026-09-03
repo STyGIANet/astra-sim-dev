@@ -21,43 +21,38 @@ NUM_PARALLEL=$1
 
 #########################
 # For reference use
-# NODES=(8) 
+# NODES=(8 16 32 64) 
 # MSG_SIZES=(1024 16384 262144 \
 #  4194304 67108864 268435456 536870912 1073741824)
 
 # MSG_NAMES=(1KB 16KB 256KB 4MB \
 # 64MB 256MB 512MB 1GB)
-# RECONFIG_DELAY=("0ns" "10ns" "100ns" "1000ns" "10000ns" "100000ns" "1000000ns") # Put unit for the reconfigs (ns)!!
-# ALPHARS=(0 10 100 1000 10000 100000 1000000)
-# BANDWIDTH=("800Gbps") # Put unit for the bandwidth (Gbps)!!
-# BANDWIDTH_VALS=(800)
-# ## These are pairs:
-# ALPHA_DELAYS(500) #units in ns!!!
-# PDELAYS=("0.0005ms") # Put unit for the delays (ms)!!
-# PROP_DELAY_NAMES=(500)
-# # alpha=10, delta=10000
-# # alpha=10000, delta=10
-# # alpha=100, delta=100
-# # alpha=10000, delta=10000
-# ALGS=("halvingDoubling" "swing" "direct1")
-# ALGS_TOPO=(all-reduce-rd all-reduce-swing all-to-all)
-# PORTS=(1)
+# RECONFIG_DELAYS=(0 10 100 1000 10000 100000 1000000 10000000)
+# BANDWIDTHS=(800 1600 3200) # in Gbps
+# ## # Delays are paired by index (i.e., ALPHA_DELAYS[i] with PDELAYS[i]),
+# rather than iterating over every possible combination.
+# ALPHA_DELAYS=(500 10000 500) # in ns
+# PDELAYS=(500 500 10000) # in ns
+# ALGS=(halvingDoubling swing direct1)
+# ALGS_TOPO=(all-reduce-rd-nd all-reduce-swing-nd all-to-all-nd)
+# PORT=1
+# DONT CHANGE BELOW
 # RELAXATION=0
 # LOGGING=0
+# RD = 0
 
 NODES=(64)
-MSG_SIZES=(16384 65536 262144 1048576 4194304 16777216 \
+MSG_SIZES=(1024 16384 65536 262144 1048576 4194304 16777216 \
 67108864 268435456 1073741824 2147483648 4294967295)
 
-MSG_NAMES=(16KB 64KB 256KB 1MB 4MB 16MB \
+MSG_NAMES=(1KB 16KB 64KB 256KB 1MB 4MB 16MB \
 64MB 256MB 1GB 2GB 4GB)
 RECONFIG_DELAYS=(10 100 1000 10000 100000 1000000 10000000) # in ns!!
 BANDWIDTHS=(800) # Put unit for the bandwidth (Gbps)!!
 ## These are pairs:
 ALPHA_DELAYS=(500) #units in ns!!!
 PDELAYS=(500)
-ALGS=(halvingDoubling)
-ALGS_TOPO=(all-reduce-rd-nd)
+ALGS=(halvingDoubling swing direct1)
 PORT=1
 RELAXATION=0
 LOGGING=0

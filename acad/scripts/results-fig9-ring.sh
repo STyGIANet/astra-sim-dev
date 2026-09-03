@@ -9,8 +9,8 @@ fi
 NODES=(64)
 MSG_NAMES=(16KB 64KB 256KB 1MB 4MB 16MB \
 64MB 256MB 1GB 2GB 4GB)
-ALPHA_DELAYS=(500 10000 500) #units in ns!!!
-PDELAYS=(500 500 50)
+ALPHA_DELAYS=(500) #units in ns!!!
+PDELAYS=(50)
 RECONFIG_DELAYS=(10 100 1000 10000 100000 1000000 10000000) # in ns!!
 BANDWIDTHS=(800) # Put unit for the bandwidth (Gbps)!!
 ALGS=(ring)
@@ -42,7 +42,7 @@ for N in ${NODES[@]};do
                 DELTA=${PDELAYS[$ALPHA_DELTA_ID]}
 
                 OUT_FILE="$N-$ALG-$BW-$ALPHA-$DELTA.csv"
-                echo "SYSTEM,MSG_NAME,RECONFIG_DELAY,RECONFIG_COUNT,TOTAL_RECONF_COST,COMPLETION_TIME" > ${RESULTS_DIR}/harvest/${OUT_FILE}
+                echo "SYSTEM,MSG_NAME,RECONFIG_DELAY,RECONFIG_COUNT,TOTAL_RECONF_COST,COMPLETION_TIME" > ${RESULTS_DIR}/harvest/fig9/${OUT_FILE}
                 for ALPHA_R in ${RECONFIG_DELAYS[@]};do
 
                     for IDX in ${!MSG_NAMES[@]};do
@@ -57,7 +57,7 @@ for N in ${NODES[@]};do
                         # TOTAL_RECONF_COST=$(awk "BEGIN {print $RECONF_COUNT * $ALPHA_R}")
                         # COMPLETION_TIME=$(awk "BEGIN {print $SIM_TIME+$TOTAL_RECONF_COST}")
 
-                        # echo "harvest,${MSG_NAME},$ALPHA_R,$RECONF_COUNT,$TOTAL_RECONF_COST,$COMPLETION_TIME" >> ${RESULTS_DIR}/harvest/${OUT_FILE}
+                        # echo "harvest,${MSG_NAME},$ALPHA_R,$RECONF_COUNT,$TOTAL_RECONF_COST,$COMPLETION_TIME" >> ${RESULTS_DIR}/harvest/fig9/${OUT_FILE}
                     
                         # # Give bvns
 
@@ -71,7 +71,7 @@ for N in ${NODES[@]};do
                         # TOTAL_RECONF_COST=$(awk "BEGIN {print $RECONF_COUNT * $ALPHA_R}")
                         # COMPLETION_TIME=$(awk "BEGIN {print $SIM_TIME+$TOTAL_RECONF_COST}")
 
-                        # echo "bvn,${MSG_NAME},$ALPHA_R,$RECONF_COUNT,$TOTAL_RECONF_COST,$COMPLETION_TIME" >> ${RESULTS_DIR}/harvest/${OUT_FILE}
+                        # echo "bvn,${MSG_NAME},$ALPHA_R,$RECONF_COUNT,$TOTAL_RECONF_COST,$COMPLETION_TIME" >> ${RESULTS_DIR}/harvest/fig9/${OUT_FILE}
                         #static
                         OUT_FILE="$N-$ALG-$BW-$ALPHA-$DELTA.csv"
                         TOPO_FILE=$OPTICAL_ROUTING_DIR/static-${ALG}RD-$N.json
@@ -83,7 +83,7 @@ for N in ${NODES[@]};do
                         TOTAL_RECONF_COST=$(awk "BEGIN {print $RECONF_COUNT * $ALPHA_R}")
                         COMPLETION_TIME=$(awk "BEGIN {print $SIM_TIME+$TOTAL_RECONF_COST}")
 
-                        echo "ring,${MSG_NAME},$ALPHA_R,$RECONF_COUNT,$TOTAL_RECONF_COST,$COMPLETION_TIME" >> ${RESULTS_DIR}/harvest/${OUT_FILE}                    
+                        echo "ring,${MSG_NAME},$ALPHA_R,$RECONF_COUNT,$TOTAL_RECONF_COST,$COMPLETION_TIME" >> ${RESULTS_DIR}/harvest/fig9/${OUT_FILE}                    
                     done
 
                 done

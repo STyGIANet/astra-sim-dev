@@ -44,8 +44,8 @@ def parse_size(size_str):
 
 for alpha, delay in configs:
 
-    ring_file = f"../results/harvest/64-ring-800-{alpha}-{delay}.csv"
-    hd_file = f"../results/harvest/64-halvingDoubling-800-{alpha}-{delay}.csv"
+    ring_file = f"../results/harvest/fig9/64-ring-800-{alpha}-{delay}.csv"
+    hd_file = f"../results/harvest/fig9/64-halvingDoubling-800-{alpha}-{delay}.csv"
 
     if not os.path.exists(ring_file):
         print(f"Skipping missing file: {ring_file}")
@@ -137,7 +137,7 @@ for alpha, delay in configs:
     ax1.tick_params(axis='both', which='major', labelsize=28, labelrotation=30)
 
     plt.tight_layout()
-    plt.savefig(f"../results/harvest/{base_name}-ring-harvest.png", dpi=300)
+    plt.savefig(f"../results/harvest/fig9/{base_name}-ring-harvest.png", dpi=300)
     plt.close()
 
     # =========================================================
@@ -165,7 +165,7 @@ for alpha, delay in configs:
     ax2.tick_params(axis='both', which='major', labelsize=28, labelrotation=30)
 
     plt.tight_layout()
-    plt.savefig(f"../results/harvest/{base_name}-static-harvest.png", dpi=300)
+    plt.savefig(f"../results/harvest/fig9/{base_name}-static-harvest.png", dpi=300)
     plt.close()
 
     # =========================================================
@@ -205,7 +205,7 @@ for alpha, delay in configs:
     ax3.tick_params(axis='both', which='major', labelsize=28, labelrotation=30)
 
     plt.tight_layout()
-    plt.savefig(f"../results/harvest/{base_name}-harvest-ring.png", dpi=300)
+    plt.savefig(f"../results/harvest/fig9/{base_name}-harvest-ring.png", dpi=300)
     plt.close()
 
 
@@ -247,5 +247,5 @@ for alpha, delay in configs:
     ax4.tick_params(axis='both', which='major', labelsize=28, labelrotation=30)
 
     plt.tight_layout()
-    plt.savefig(f"../results/harvest/{base_name}-best-harvest.png", dpi=300)
+    plt.savefig(f"../results/harvest/fig9/{base_name}-best-harvest.png", dpi=300)
     plt.close()

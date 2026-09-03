@@ -7,13 +7,13 @@ if [ ! -d "$RESULTS_DIR/harvest" ]; then
 fi
 
 NODES=(64)
-MSG_NAMES=(16KB 64KB 256KB 1MB 4MB 16MB \
-64MB 256MB 1GB 2GB 4GB)
-ALPHA_DELAYS=(500 10000 500) #units in ns!!!
-PDELAYS=(500 500 50)
+MSG_NAMES=(1KB 16KB 64KB 256KB 1MB 4MB 16MB \
+64MB 256MB 1GB)
+ALPHA_DELAYS=(500) #units in ns!!!
+PDELAYS=(500)
 RECONFIG_DELAYS=(10 100 1000 10000 100000 1000000 10000000) # in ns!!
 BANDWIDTHS=(800) # Put unit for the bandwidth (Gbps)!!
-ALGS=(halvingDoubling)
+ALGS=(halvingDoubling swing direct1)
 
 cd "${SCRIPT_DIR}"
 
@@ -49,7 +49,7 @@ for N in ${NODES[@]};do
                 DELTA=${PDELAYS[$ALPHA_DELTA_ID]}
 
                 OUT_FILE="$N-$ALG-$BW-$ALPHA-$DELTA.csv"
-                echo "SYSTEM,MSG_NAME,RECONFIG_DELAY,RECONFIG_COUNT,TOTAL_RECONF_COST,COMPLETION_TIME" > ${RESULTS_DIR}/harvest/${OUT_FILE}
+                echo "SYSTEM,MSG_NAME,RECONFIG_DELAY,RECONFIG_COUNT,TOTAL_RECONF_COST,COMPLETION_TIME" > ${RESULTS_DIR}/harvest/fig5/${OUT_FILE}
                 for ALPHA_R in ${RECONFIG_DELAYS[@]};do
 
                     for IDX in ${!MSG_NAMES[@]};do
@@ -78,7 +78,7 @@ for N in ${NODES[@]};do
                         TOTAL_RECONF_COST=$(awk "BEGIN {print $RECONF_COUNT * $ALPHA_R}")
                         COMPLETION_TIME=$(awk "BEGIN {print $SIM_TIME+$TOTAL_RECONF_COST}")
 
-                        echo "bvn,${MSG_NAME},$ALPHA_R,$RECONF_COUNT,$TOTAL_RECONF_COST,$COMPLETION_TIME" >> ${RESULTS_DIR}/harvest/${OUT_FILE}
+                        echo "bvn,${MSG_NAME},$ALPHA_R,$RECONF_COUNT,$TOTAL_RECONF_COST,$COMPLETION_TIME" >> ${RESULTS_DIR}/harvest/fig5/${OUT_FILE}
                         #static
                         OUT_FILE="$N-$ALG-$BW-$ALPHA-$DELTA.csv"
                         TOPO_FILE=$OPTICAL_ROUTING_DIR/static-$ALG-$N-$P.json
@@ -90,7 +90,7 @@ for N in ${NODES[@]};do
                         TOTAL_RECONF_COST=$(awk "BEGIN {print $RECONF_COUNT * $ALPHA_R}")
                         COMPLETION_TIME=$(awk "BEGIN {print $SIM_TIME+$TOTAL_RECONF_COST}")
 
-                        echo "static,${MSG_NAME},$ALPHA_R,$RECONF_COUNT,$TOTAL_RECONF_COST,$COMPLETION_TIME" >> ${RESULTS_DIR}/harvest/${OUT_FILE}                    
+                        echo "static,${MSG_NAME},$ALPHA_R,$RECONF_COUNT,$TOTAL_RECONF_COST,$COMPLETION_TIME" >> ${RESULTS_DIR}/harvest/fig5/${OUT_FILE}                    
                     done
 
                 done
