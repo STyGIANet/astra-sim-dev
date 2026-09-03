@@ -50,8 +50,8 @@ MSG_NAMES=(1KB 16KB 64KB 256KB 1MB 4MB 16MB \
 RECONFIG_DELAYS=(10 100 1000 10000 100000 1000000 10000000) # in ns!!
 BANDWIDTHS=(800) # Put unit for the bandwidth (Gbps)!!
 ## These are pairs:
-ALPHA_DELAYS=(500) #units in ns!!!
-PDELAYS=(500)
+ALPHA_DELAYS=(500 500) #units in ns!!!
+PDELAYS=(500 50)
 ALGS=(halvingDoubling swing direct1)
 PORT=1
 RELAXATION=0

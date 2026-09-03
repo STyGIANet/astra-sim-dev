@@ -44,7 +44,7 @@ MSG_NAMES=(16KB 64KB 256KB 1MB 4MB 16MB \
 BANDWIDTHS=(800) # Put unit for the bandwidth (Gbps)!!
 ## These are pairs:
 ALPHA_DELAYS=(500) #units in ns!!!
-PDELAYS=(500)
+PDELAYS=(50)
 ALGS=(ring)
 PORT=1
 

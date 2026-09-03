@@ -5,7 +5,9 @@ source config.sh
 if [ ! -d "$RESULTS_DIR/harvest" ]; then
   mkdir "$RESULTS_DIR/harvest"
 fi
-
+if [ ! -d "$RESULTS_DIR/harvest/fig9" ]; then
+  mkdir "$RESULTS_DIR/harvest/fig9"
+fi
 NODES=(64)
 MSG_NAMES=(16KB 64KB 256KB 1MB 4MB 16MB \
 64MB 256MB 1GB 2GB 4GB)
@@ -64,7 +66,7 @@ for N in ${NODES[@]};do
                         TOTAL_RECONF_COST=$(awk "BEGIN {print $RECONF_COUNT * $ALPHA_R}")
                         COMPLETION_TIME=$(awk "BEGIN {print $SIM_TIME+$TOTAL_RECONF_COST}")
 
-                        echo "harvest,${MSG_NAME},$ALPHA_R,$RECONF_COUNT,$TOTAL_RECONF_COST,$COMPLETION_TIME" >> ${RESULTS_DIR}/harvest/${OUT_FILE}
+                        echo "harvest,${MSG_NAME},$ALPHA_R,$RECONF_COUNT,$TOTAL_RECONF_COST,$COMPLETION_TIME" >> ${RESULTS_DIR}/harvest/fig9/${OUT_FILE}
                     
                         # Give bvns
 

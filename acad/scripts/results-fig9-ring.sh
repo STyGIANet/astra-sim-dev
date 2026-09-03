@@ -5,7 +5,9 @@ source config.sh
 if [ ! -d "$RESULTS_DIR/harvest" ]; then
   mkdir "$RESULTS_DIR/harvest"
 fi
-
+if [ ! -d "$RESULTS_DIR/harvest/fig9" ]; then
+  mkdir "$RESULTS_DIR/harvest/fig9"
+fi
 NODES=(64)
 MSG_NAMES=(16KB 64KB 256KB 1MB 4MB 16MB \
 64MB 256MB 1GB 2GB 4GB)
