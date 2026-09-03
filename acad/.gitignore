@@ -13,7 +13,9 @@ memory-configs/
 system-configs/
 network-topologies/
 reconfigurable-topologies/
+oneshot-topologies/
 collectives/
 gurobi.lic
 *tar.gz
 *.log
+oneshot-results/

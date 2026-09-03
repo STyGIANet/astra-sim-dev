@@ -11,13 +11,13 @@ SCRIPT_DIR=$(dirname "$(realpath $0)")
 ASTRA_SIM_DIR="${SCRIPT_DIR:?}"/../../astra-sim
 NS3_DIR="${SCRIPT_DIR:?}"/../../extern/network_backend/ns-3
 # Inputs - change as necessary.
-WORKLOAD=$(realpath "${SCRIPT_DIR:?}"/..)/et-workloads/AllReduce-8-1KB-optical # use chakra
-SYSTEM=$(realpath "${SCRIPT_DIR:?}"/../base-configs/system-swing.json)
+WORKLOAD=$(realpath "${SCRIPT_DIR:?}"/..)/et-workloads/AllReduce-64-4MB-optical # use chakra
+SYSTEM=$(realpath "${SCRIPT_DIR:?}"/../base-configs/system-hd.json)
 MEMORY=$(realpath "${SCRIPT_DIR:?}"/../base-configs/remote_memory.json)
-LOGICAL_TOPOLOGY=$(realpath "${SCRIPT_DIR:?}"/../base-configs/logical-topo-8.json)
+LOGICAL_TOPOLOGY=$(realpath "${SCRIPT_DIR:?}"/../base-configs/logical-topo-64.json)
 # Note that ONLY this file is relative to NS3_DIR/simulation
-NETWORK=$(realpath "${SCRIPT_DIR:?}"/../base-configs/config-bvn-8-OPTICAL-none-swing-1KB-1000-1000-800-0.txt)
-OPTICAL_ROUTING=$(realpath "${SCRIPT_DIR:?}"/../base-configs/bvn-swing-8-2-0.json)
+NETWORK=$(realpath "${SCRIPT_DIR:?}"/../network-configs/config-optical-64-OPTICAL-none-halvingDoubling-4MB-500-500-800.txt)
+OPTICAL_ROUTING=$(realpath "${SCRIPT_DIR:?}"/../reconfigurable-topologies/harvest-halvingDoubling-64-1-4MB-800-500-500-10000000-0.json)
 # Functions
 function setup {
     protoc et_def.proto\

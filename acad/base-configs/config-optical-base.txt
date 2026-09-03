@@ -3,7 +3,7 @@ USE_DYNAMIC_PFC_THRESHOLD 1
 
 PACKET_PAYLOAD_SIZE 9000
 
-TOPOLOGY_FILE acad/base-configs/leaf-spine-1-0-8.txt
+TOPOLOGY_FILE acad/base-configs/optical-2-64-10-800.txt
 FLOW_FILE ../../scratch/output/flow.txt
 TRACE_FILE acad/trace.txt
 TRACE_OUTPUT_FILE acad/mix.tr

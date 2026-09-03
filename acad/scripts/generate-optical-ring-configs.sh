@@ -3,7 +3,6 @@
 # find the absolute path to this script
 source config.sh
 
-COLL_DIR=$SCRIPT_DIR/../collectives
 if [[ ! -d ${RESULTS_DIR}/mix ]];then
 	mkdir -p ${RESULTS_DIR}/mix
 fi
@@ -47,26 +46,25 @@ NUM_PARALLEL=$1
 
 NODES=(64)
 MSG_SIZES=(16384 65536 262144 1048576 4194304 16777216 \
-67108864 268435456 1073741824 2147483648 4294967295)
+67108864 268435456 1073741824 2147483648 4294967296)
 
 MSG_NAMES=(16KB 64KB 256KB 1MB 4MB 16MB \
 64MB 256MB 1GB 2GB 4GB)
-RECONFIG_DELAYS=(10 100 1000 10000 100000 1000000 10000000) # in ns!!
 BANDWIDTHS=(800) # Put unit for the bandwidth (Gbps)!!
 ## These are pairs:
-ALPHA_DELAYS=(500) #units in ns!!!
-PDELAYS=(500)
-ALGS=(halvingDoubling)
-ALGS_TOPO=(all-reduce-rd-nd)
+ALPHA_DELAYS=(500 10000 500) #units in ns!!!
+PDELAYS=(50 500 500)
+ALGS=(ring)
 PORT=1
-RELAXATION=0
-LOGGING=0
-RD=0
 
 APP_LOADBALANCE_ALGS=(none)
 ROUTING_ALGS=(OPTICAL)
 
 # Hmm, it is probably better to generate these config files in-place in the respective scripts where needed.
+if [[ ${#ALGS[@]} -ne 1 || ${ALGS[0]} != "ring" ]]; then
+    echo "Error: This script is exclusively for ring type algorithms"
+    exit 1
+fi
 
 # First, generate txt workload files
 cd $TXT_WORKLOAD_DIR
@@ -167,8 +165,8 @@ done
 
 ########################################################################
 # Generate network config files
-cd $NETWORK_DIR
 echo "Generating network configs"
+cd $NETWORK_DIR
 for IDX in ${!MSG_NAMES[@]};do
 	MSG_NAME=${MSG_NAMES[$IDX]}
 for APP_LOADBALANCE_ALG in ${APP_LOADBALANCE_ALGS[@]}; do
@@ -182,29 +180,27 @@ for NUM_NODES in ${NODES[@]}; do
 	for ALPHA_DELTA_ID in ${!ALPHA_DELAYS[@]};do
 		ALPHA=${ALPHA_DELAYS[$ALPHA_DELTA_ID]}
 		PDELAY=${PDELAYS[$ALPHA_DELTA_ID]}
-	for RECONF in ${RECONFIG_DELAYS[@]}; do
 	for BW in ${BANDWIDTHS[@]}; do
-		cp $BASE_CONFIG_DIR/config-optical-base.txt config-optical-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALG}-${MSG_NAME}-${ALPHA}-${PDELAY}-${BW}-${RECONF}.txt
-		sed -i "s|TOPOLOGY_FILE .*|TOPOLOGY_FILE acad/network-topologies/optical-${N_TORS}-${NUM_NODES}-${PDELAY}-${BW}.txt|g" config-optical-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALG}-${MSG_NAME}-${ALPHA}-${PDELAY}-${BW}-${RECONF}.txt
-		sed -i "s|TRACE_OUTPUT_FILE .*|TRACE_OUTPUT_FILE ${RESULTS_DIR}/mix/mix-optical-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALG}-${MSG_NAME}-${ALPHA}-${PDELAY}-${BW}-${RECONF}.tr|g" config-optical-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALG}-${MSG_NAME}-${ALPHA}-${PDELAY}-${BW}-${RECONF}.txt
-		sed -i "s|FCT_OUTPUT_FILE .*|FCT_OUTPUT_FILE ${RESULTS_DIR}/fct/fct-optical-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALG}-${MSG_NAME}-${ALPHA}-${PDELAY}-${BW}-${RECONF}.txt|g" config-optical-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALG}-${MSG_NAME}-${ALPHA}-${PDELAY}-${BW}-${RECONF}.txt
-		sed -i "s|PFC_OUTPUT_FILE .*|PFC_OUTPUT_FILE ${RESULTS_DIR}/pfc/pfc-optical-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALG}-${MSG_NAME}-${ALPHA}-${PDELAY}-${BW}-${RECONF}.txt|g" config-optical-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALG}-${MSG_NAME}-${ALPHA}-${PDELAY}-${BW}-${RECONF}.txt
-		sed -i "s|QLEN_MON_FILE .*|QLEN_MON_FILE ${RESULTS_DIR}/qlen/qlen-optical-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALG}-${MSG_NAME}-${ALPHA}-${PDELAY}-${BW}-${RECONF}.txt|g" config-optical-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALG}-${MSG_NAME}-${ALPHA}-${PDELAY}-${BW}-${RECONF}.txt
+		cp $BASE_CONFIG_DIR/config-optical-base.txt config-optical-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALG}-${MSG_NAME}-${ALPHA}-${PDELAY}-${BW}.txt
+		sed -i "s|TOPOLOGY_FILE .*|TOPOLOGY_FILE acad/network-topologies/optical-${N_TORS}-${NUM_NODES}-${PDELAY}-${BW}.txt|g" config-optical-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALG}-${MSG_NAME}-${ALPHA}-${PDELAY}-${BW}.txt
+		sed -i "s|TRACE_OUTPUT_FILE .*|TRACE_OUTPUT_FILE ${RESULTS_DIR}/mix/mix-optical-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALG}-${MSG_NAME}-${ALPHA}-${PDELAY}-${BW}.tr|g" config-optical-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALG}-${MSG_NAME}-${ALPHA}-${PDELAY}-${BW}.txt
+		sed -i "s|FCT_OUTPUT_FILE .*|FCT_OUTPUT_FILE ${RESULTS_DIR}/fct/fct-optical-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALG}-${MSG_NAME}-${ALPHA}-${PDELAY}-${BW}.txt|g" config-optical-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALG}-${MSG_NAME}-${ALPHA}-${PDELAY}-${BW}.txt
+		sed -i "s|PFC_OUTPUT_FILE .*|PFC_OUTPUT_FILE ${RESULTS_DIR}/pfc/pfc-optical-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALG}-${MSG_NAME}-${ALPHA}-${PDELAY}-${BW}.txt|g" config-optical-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALG}-${MSG_NAME}-${ALPHA}-${PDELAY}-${BW}.txt
+		sed -i "s|QLEN_MON_FILE .*|QLEN_MON_FILE ${RESULTS_DIR}/qlen/qlen-optical-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALG}-${MSG_NAME}-${ALPHA}-${PDELAY}-${BW}.txt|g" config-optical-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALG}-${MSG_NAME}-${ALPHA}-${PDELAY}-${BW}.txt
 
-		sed -i "s|SOURCE_ROUTING .*|SOURCE_ROUTING 0|g" config-optical-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALG}-${MSG_NAME}-${ALPHA}-${PDELAY}-${BW}-${RECONF}.txt
-		sed -i "s|REPS .*|REPS 0|g" config-optical-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALG}-${MSG_NAME}-${ALPHA}-${PDELAY}-${BW}-${RECONF}.txt
-		sed -i "s|REPSv4 .*|REPSv4 0|g" config-optical-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALG}-${MSG_NAME}-${ALPHA}-${PDELAY}-${BW}-${RECONF}.txt
-		sed -i "s|END_HOST_SPRAY .*|END_HOST_SPRAY 0|g" config-optical-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALG}-${MSG_NAME}-${ALPHA}-${PDELAY}-${BW}-${RECONF}.txt
-		sed -i "s|OPTICAL .*|OPTICAL 0|g" config-optical-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALG}-${MSG_NAME}-${ALPHA}-${PDELAY}-${BW}-${RECONF}.txt
+		sed -i "s|SOURCE_ROUTING .*|SOURCE_ROUTING 0|g" config-optical-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALG}-${MSG_NAME}-${ALPHA}-${PDELAY}-${BW}.txt
+		sed -i "s|REPS .*|REPS 0|g" config-optical-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALG}-${MSG_NAME}-${ALPHA}-${PDELAY}-${BW}.txt
+		sed -i "s|REPSv4 .*|REPSv4 0|g" config-optical-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALG}-${MSG_NAME}-${ALPHA}-${PDELAY}-${BW}.txt
+		sed -i "s|END_HOST_SPRAY .*|END_HOST_SPRAY 0|g" config-optical-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALG}-${MSG_NAME}-${ALPHA}-${PDELAY}-${BW}.txt
+		sed -i "s|OPTICAL .*|OPTICAL 0|g" config-optical-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALG}-${MSG_NAME}-${ALPHA}-${PDELAY}-${BW}.txt
 
-		sed -i "s|${ROUTING} .*|${ROUTING} 1|g" config-optical-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALG}-${MSG_NAME}-${ALPHA}-${PDELAY}-${BW}-${RECONF}.txt
+		sed -i "s|${ROUTING} .*|${ROUTING} 1|g" config-optical-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALG}-${MSG_NAME}-${ALPHA}-${PDELAY}-${BW}.txt
 
 		if [[ $ALG == "ring" ]];then
-			sed -i "s|STPRIO .*|STPRIO 1|g" config-optical-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALG}-${MSG_NAME}-${ALPHA}-${PDELAY}-${BW}-${RECONF}.txt
+			sed -i "s|STPRIO .*|STPRIO 1|g" config-optical-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALG}-${MSG_NAME}-${ALPHA}-${PDELAY}-${BW}.txt
 		else
-			sed -i "s|STPRIO .*|STPRIO 0|g" config-optical-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALG}-${MSG_NAME}-${ALPHA}-${PDELAY}-${BW}-${RECONF}.txt
+			sed -i "s|STPRIO .*|STPRIO 0|g" config-optical-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALG}-${MSG_NAME}-${ALPHA}-${PDELAY}-${BW}.txt
 		fi
-	done
 	done
 	done
 	done
@@ -231,7 +227,7 @@ for NUM_NODES in ${NODES[@]}; do
 	# for ALPHA in ${ALPHA_DELAYS[@]}; do
 	# for PDELAY in ${PDELAYS[@]}; do
 	for BW in ${BANDWIDTHS[@]}; do
-		echo "Generating static network configs"
+		
 		cp $BASE_CONFIG_DIR/config-optical-base.txt config-static-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALG}-${MSG_NAME}-${ALPHA}-${PDELAY}-${BW}.txt
 		sed -i "s|TOPOLOGY_FILE .*|TOPOLOGY_FILE acad/network-topologies/optical-${N_TORS}-${NUM_NODES}-${PDELAY}-${BW}.txt|g" config-static-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALG}-${MSG_NAME}-${ALPHA}-${PDELAY}-${BW}.txt
 		sed -i "s|TRACE_OUTPUT_FILE .*|TRACE_OUTPUT_FILE ${RESULTS_DIR}/mix/mix-static-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALG}-${MSG_NAME}-${ALPHA}-${PDELAY}-${BW}.tr|g" config-static-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALG}-${MSG_NAME}-${ALPHA}-${PDELAY}-${BW}.txt
@@ -256,7 +252,6 @@ for NUM_NODES in ${NODES[@]}; do
 
 		# for RECONF in ${RECONFIG_DELAYS[@]}; do
 		RECONF="0"
-			echo "Generating bvn network configs"
 			cp $BASE_CONFIG_DIR/config-optical-base.txt config-bvn-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALG}-${MSG_NAME}-${ALPHA}-${PDELAY}-${BW}-${RECONF}.txt
 			sed -i "s|TOPOLOGY_FILE .*|TOPOLOGY_FILE acad/network-topologies/optical-${N_TORS}-${NUM_NODES}-${PDELAY}-${BW}.txt|g" config-bvn-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALG}-${MSG_NAME}-${ALPHA}-${PDELAY}-${BW}-${RECONF}.txt
 			sed -i "s|TRACE_OUTPUT_FILE .*|TRACE_OUTPUT_FILE ${RESULTS_DIR}/mix/mix-bvn-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALG}-${MSG_NAME}-${ALPHA}-${PDELAY}-${BW}-${RECONF}.tr|g" config-bvn-${NUM_NODES}-${ROUTING}-${APP_LOADBALANCE_ALG}-${ALG}-${MSG_NAME}-${ALPHA}-${PDELAY}-${BW}-${RECONF}.txt
@@ -285,3 +280,20 @@ done
 done
 done
 done
+
+cd $SCRIPT_DIR
+if [[ $ALG == "ring" ]]; then
+    for N in "${NODES[@]}"; do
+        # for ALPHA_DELTA_ID in "${!ALPHA_DELAYS[@]}"; do
+            # ALPHA=${ALPHA_DELAYS[$ALPHA_DELTA_ID]}
+            
+            if [[ $PORT -ne 1 ]]; then
+                echo "Port $PORT is not supported"
+                exit 1
+            fi
+			# Since it is a ring algorithm, static and harvest use the same schedule
+        	python generate-ring-schedule.py "$N" "$OPTICAL_ROUTING_DIR/harvest-ringRD-${N}.json"
+        	python generate-ring-schedule.py "$N" "$OPTICAL_ROUTING_DIR/static-ringRD-${N}.json"
+        # done
+    done
+fi

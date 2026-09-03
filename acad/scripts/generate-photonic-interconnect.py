@@ -44,7 +44,7 @@ def gen_optical_topology(args):
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Python script to generate CLOS topologies')
+    parser = argparse.ArgumentParser(description='Python script to generate optical interconnect')
     parser.add_argument('-l','--latency',type=str,default='500',help='link propagation delay,default 0.0005ms')
     parser.add_argument('-nicbw','--nic_bandwidth',type=str,default='100',help='nic to tor bandwidth,default 100Gbps')
     parser.add_argument('-er','--error_rate',type=str,default='0',help='error_rate,default 0')

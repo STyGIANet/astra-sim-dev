@@ -2,14 +2,18 @@
 
 source config.sh
 
+if [ ! -d "$RESULTS_DIR/harvest" ]; then
+  mkdir "$RESULTS_DIR/harvest"
+fi
+
 NODES=(64)
-MSG_NAMES=(1KB 16KB 256KB 4MB \
-64MB 256MB 512MB 1GB)
-ALPHA_DELAYS=(1000) #units in ns!!!
-PDELAYS=(1000) # ns
-RECONFIG_DELAYS=(10 100 1000 10000 100000 1000000) # Put unit for the reconfigs (ns)!!
+MSG_NAMES=(16KB 64KB 256KB 1MB 4MB 16MB \
+64MB 256MB 1GB 2GB 4GB)
+ALPHA_DELAYS=(500 10000 500) #units in ns!!!
+PDELAYS=(500 500 50)
+RECONFIG_DELAYS=(10 100 1000 10000 100000 1000000 10000000) # in ns!!
 BANDWIDTHS=(800) # Put unit for the bandwidth (Gbps)!!
-ALGS=("halvingDoubling")
+ALGS=(halvingDoubling)
 
 cd "${SCRIPT_DIR}"
 
@@ -86,7 +90,7 @@ for N in ${NODES[@]};do
                         TOTAL_RECONF_COST=$(awk "BEGIN {print $RECONF_COUNT * $ALPHA_R}")
                         COMPLETION_TIME=$(awk "BEGIN {print $SIM_TIME+$TOTAL_RECONF_COST}")
 
-                        echo "static,${MSG_NAME},0,$RECONF_COUNT,$TOTAL_RECONF_COST,$COMPLETION_TIME" >> ${RESULTS_DIR}/harvest/${OUT_FILE}                    
+                        echo "static,${MSG_NAME},$ALPHA_R,$RECONF_COUNT,$TOTAL_RECONF_COST,$COMPLETION_TIME" >> ${RESULTS_DIR}/harvest/${OUT_FILE}                    
                     done
 
                 done
