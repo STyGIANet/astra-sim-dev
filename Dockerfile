@@ -30,7 +30,7 @@ ENV PATH="/opt/venv/astra-sim/bin:$PATH"
 RUN pip3 install --upgrade pip
 
 # STG dependencies
-RUN pip3 install numpy sympy graphviz pandas
+RUN pip3 install numpy sympy graphviz pandas seaborn
 ### ======================================================
 
 
@@ -85,7 +85,7 @@ ENV PROTOBUF_FROM_SOURCE=True
 ### ======================================================
 
 RUN pip3 uninstall -y chakra protobuf
-RUN pip3 install protobuf==6.31.1
+RUN pip3 install protobuf==7.36.1
 
 ARG GUROBI_VER=13.0.0
 

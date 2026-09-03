@@ -35,3 +35,4 @@ runs
 extern/graph_frontend/param/
 
 gurobi.lic
+aux
