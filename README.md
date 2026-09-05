@@ -13,17 +13,29 @@ If you are interested in synthesizing new topologies, refer to the `synthesis` f
 
 ## Building Harvest
 
+### Update dependecies
+Please make the following edit to `extern/graph_frontend/chakra/.pyproject.toml`: 
+
+Remove `"protobuf==5.*"`, and replace with `"protobuf",`
 ```bash
-cd astra-sim
-./acad/scripts/build-optical-interconnect.sh
+dependencies = [
+    "protobuf",
+    "graphviz",
+    "networkx",
+    "pydot",
+    "HolisticTraceAnalysis @ git+https://github.com/facebookresearch/HolisticTraceAnalysis.git@d731cc2e2249976c97129d409a83bd53d93051f6"
+]
 ```
-
-The `build-optical-interconnect.sh` script builds the ns-3 backend.
-
 ### Install Chakra
 
 ```bash
 ./utils/install_chakra.sh
+```
+
+### Build ns-3 backend
+```bash
+cd /app/astra-sim
+./acad/scripts/build-optical-interconnect.sh
 ```
 
 All set!
@@ -77,6 +89,16 @@ Now, we can generate the final heatmaps using:
 ./run-fig5-heatmaps.sh
 ```
 The folder `astra-sim/acad/results/harvest/fig5` will contain the heatmaps that were used in Figure 5.
+| Paper figure | Generated file |
+| --- | --- |
+| Figure 5(a) | `results/harvest/fig5/64-halvingDoubling-800-500-500-static-harvest12,8.png` |
+| Figure 5(b) | `results/harvest/fig5/64-swing-800-500-500-static-harvest12,8.png` |
+| Figure 5(c) | `results/harvest/fig5/64-direct1-800-500-500-static-harvest12,8.png` |
+| Figure 5(d) | `results/harvest/fig5/64-direct1-800-500-500-best-harvest12,8.png` |
+| Figure 5(e) | `results/harvest/fig5/64-halvingDoubling-800-500-500-bvn-harvest12,8.png` |
+| Figure 5(f) | `results/harvest/fig5/64-swing-800-500-500-bvn-harvest12,8.png` |
+| Figure 5(g) | `results/harvest/fig5/64-direct1-800-500-500-bvn-harvest12,8.png` |
+| Figure 5(h) | `results/harvest/fig5/64-halvingDoubling-800-500-500-best-harvest12,8.png` |
 
 ---
 ### Reproducing Figure 9(b)
