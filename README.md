@@ -13,7 +13,7 @@ If you are interested in synthesizing new topologies, refer to the `synthesis` f
 
 ## Building Harvest
 
-### Update dependecies
+### Update dependencies
 Please make the following edit to `extern/graph_frontend/chakra/.pyproject.toml`: 
 
 Remove `"protobuf==5.*"`, and replace with `"protobuf",`
