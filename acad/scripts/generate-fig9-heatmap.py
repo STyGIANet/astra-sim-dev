@@ -10,8 +10,8 @@ from matplotlib.ticker import FixedLocator, NullLocator
 
 configs = [
     (500, 50),
-    (10000, 500),
-    (500, 500),
+    # (10000, 500),
+    # (500, 500),
 ]
 
 systems = ['ring', 'static', 'harvest']

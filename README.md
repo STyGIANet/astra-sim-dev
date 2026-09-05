@@ -142,4 +142,27 @@ python generate-fig9-heatmap.py
 ```
 The folder `astra-sim/acad/results/harvest/fig9` will contain the heatmaps that were used in Figure 9(b).
 
+When alpha= 500 ns and prop delay = 50 ns
+| Paper figure | Generated file |
+| --- | --- |
+| Figure 9(b) | `results/harvest/fig9/64-nodes-500-50-best-harvest.png` |
+| Figure 13(a) | `results/harvest/fig9/64-nodes-500-50-ring-harvest.png` |
+| Figure 13(b) | `results/harvest/fig9/64-nodes-500-50-harvest-ring.png` |
+| Figure 13(c) | `results/harvest/fig9/64-nodes-500-50-best-harvest.png` |
+
+When alpha= 500 ns and prop delay = 500 ns
+| Paper figure | Generated file |
+| --- | --- |
+| Figure 16(a) | `results/harvest/fig9/64-nodes-500-500-ring-harvest.png` |
+| Figure 16(b) | `results/harvest/fig9/64-nodes-500-500-harvest-ring.png` |
+| Figure 16(c) | `results/harvest/fig9/64-nodes-500-500-best-harvest.png` |
+
+When alpha= 10000 ns and prop delay = 500 ns
+| Paper figure | Generated file |
+| --- | --- |
+| Figure 17(a) | `results/harvest/fig9/64-nodes-10000-500-ring-harvest.png` |
+| Figure 17(b) | `results/harvest/fig9/64-nodes-10000-500-harvest-ring.png` |
+| Figure 17(c) | `results/harvest/fig9/64-nodes-10000-500-best-harvest.png` |
+
 Done!
+---
