@@ -12,7 +12,7 @@ network-configs/
 memory-configs/
 system-configs/
 network-topologies/
-reconfigurable-topologies/
+# reconfigurable-topologies/
 oneshot-topologies/
 collectives/
 gurobi.lic
